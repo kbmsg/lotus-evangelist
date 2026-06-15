@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotus Evangelist — LinkedIn Post Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  background: #ffffff;
+  color: #000000;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: #0d2a8a;
+  color: #ffffff;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.06em; }
+header .sub { font-size: 18px; font-weight: 400; opacity: 0.85; }
+.day-badge {
+  margin-left: auto;
+  background: #ffffff;
+  color: #0d2a8a;
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  background: #e8eeff;
+  border-bottom: 3px solid #0d2a8a;
+}
+.tab {
+  padding: 14px 30px;
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0d2a8a;
+  cursor: pointer;
+  border-bottom: 4px solid transparent;
+  margin-bottom: -3px;
+  letter-spacing: 0.04em;
+}
+.tab.active { background: #ffffff; border-bottom-color: #0d2a8a; }
+.tab:hover:not(.active) { background: #d8e6fc; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: flex; }
+
+/* ── LAYOUT ── */
+#tab-compose { flex-direction: row; min-height: calc(100vh - 115px); }
+.panel-left {
+  width: 560px;
+  flex-shrink: 0;
+  border-right: 3px solid #0d2a8a;
+  background: #f0f5ff;
+  padding: 28px 28px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+.panel-right {
+  flex: 1;
+  padding: 28px 36px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: #ffffff;
+}
+#tab-history {
+  flex-direction: column;
+  padding: 32px 40px;
+  gap: 24px;
+  min-height: calc(100vh - 115px);
+  background: #ffffff;
+}
+
+/* ── SECTION LABELS ── */
+.section-label {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #0d2a8a;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #0d2a8a;
+  padding-bottom: 4px;
+}
+
+/* ── FIELDS ── */
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field label { font-size: 18px; font-weight: 700; color: #000; }
+.field textarea, .field input, .field select {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  color: #000;
+  background: #ffffff;
+  border: 2px solid #0d2a8a;
+  border-radius: 4px;
+  padding: 10px 14px;
+  outline: none;
+  width: 100%;
+}
+.field textarea { resize: vertical; min-height: 100px; }
+.field textarea:focus, .field input:focus, .field select:focus { background: #f0f5ff; }
+
+/* ── CATEGORY PILLS ── */
+.cat-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0d2a8a;
+  background: #ffffff;
+  border: 2px solid #0d2a8a;
+  border-radius: 30px;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cat-btn:hover { background: #d8e6fc; }
+.cat-btn.active { background: #0d2a8a; color: #ffffff; }
+
+/* ── TONE GRID ── */
+.tone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tone-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0d2a8a;
+  background: #ffffff;
+  border: 2px solid #0d2a8a;
+  border-radius: 4px;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.3;
+  transition: all 0.15s;
+}
+.tone-btn:hover { background: #d8e6fc; }
+.tone-btn.active { background: #0d2a8a; color: #ffffff; }
+
+/* ── TOGGLES ── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.toggle-row .lbl { font-size: 18px; font-weight: 700; color: #000; }
+.toggle { position: relative; width: 52px; height: 28px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; inset: 0; background: #aac0e8; border-radius: 28px; cursor: pointer; transition: 0.2s; }
+.slider::before { content: ''; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+input:checked + .slider { background: #0d2a8a; }
+input:checked + .slider::before { transform: translateX(24px); }
+.hint { font-size: 15px; color: #444; }
+
+/* ── GENERATE BUTTON ── */
+.generate-btn {
+  background: #0d2a8a;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 16px 24px;
+  font-family: 'DM Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: auto;
+  letter-spacing: 0.04em;
+  transition: background 0.15s;
+}
+.generate-btn:hover { background: #1a40c0; }
+.generate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── PLACEHOLDER ── */
+.placeholder-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 60px 40px;
+  border: 3px dashed #0d2a8a;
+  border-radius: 4px;
+}
+.placeholder-state .big { font-size: 56px; opacity: 0.2; }
+.placeholder-state p { font-size: 18px; max-width: 340px; line-height: 1.6; color: #333; }
+
+/* ── POST CARD ── */
+.result-card { border: 3px solid #0d2a8a; border-radius: 4px; overflow: hidden; display: none; }
+.result-card.visible { display: block; }
+.card-header {
+  background: #e8eeff;
+  border-bottom: 2px solid #0d2a8a;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.card-header-label { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0d2a8a; }
+.card-actions { display: flex; gap: 8px; }
+.copy-btn, .small-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0d2a8a;
+  background: #ffffff;
+  border: 2px solid #0d2a8a;
+  border-radius: 3px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.copy-btn:hover, .small-btn:hover { background: #0d2a8a; color: #ffffff; }
+.copy-btn.copied { background: #145c35; color: #ffffff; border-color: #145c35; }
+
+#post-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #000;
+  background: #ffffff;
+  border: none;
+  width: 100%;
+  padding: 22px;
+  outline: none;
+  resize: none;
+  min-height: 220px;
+}
+
+.post-meta {
+  background: #e8eeff;
+  border-top: 2px solid #0d2a8a;
+  padding: 10px 18px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.post-meta span { font-size: 15px; font-weight: 700; color: #0d2a8a; }
+.post-meta span.warn { color: #a02020; }
+.post-meta span.ok { color: #145c35; }
+
+/* ── SAVE BAR ── */
+.save-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fffbe8;
+  border: 2px solid #a87520;
+  border-radius: 4px;
+  padding: 14px 18px;
+}
+.save-bar.visible { display: flex; }
+.save-bar p { font-size: 17px; font-weight: 700; color: #000; }
+.save-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  background: #a87520;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.save-btn:hover { background: #7a5010; }
+
+/* ── EGG BAR ── */
+.egg-bar {
+  display: none;
+  background: #e8eeff;
+  border: 2px solid #0d2a8a;
+  border-radius: 4px;
+  padding: 14px 18px;
+}
+.egg-bar.visible { display: block; }
+.egg-bar strong { display: block; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0d2a8a; margin-bottom: 6px; }
+.egg-bar span { font-size: 17px; color: #000; }
+
+/* ── SEND ROW ── */
+.send-row { display: none; gap: 12px; align-items: center; }
+.send-row.visible { display: flex; }
+.email-input {
+  flex: 1;
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  color: #000;
+  background: #ffffff;
+  border: 2px solid #0d2a8a;
+  border-radius: 4px;
+  padding: 10px 14px;
+  outline: none;
+}
+.email-input:focus { background: #f0f5ff; }
+.send-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  background: #a87520;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 11px 24px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.send-btn:hover { background: #7a5010; }
+
+/* ── STATUS BAR ── */
+.status-bar { display: none; padding: 14px 18px; border-radius: 4px; font-size: 17px; font-weight: 700; }
+.status-bar.visible { display: block; }
+.status-bar.success { background: #e0f5ea; color: #0a3d20; border: 2px solid #60b880; }
+.status-bar.error   { background: #fde0e0; color: #6a0a0a; border: 2px solid #e08080; }
+.status-bar.info    { background: #e8eeff; color: #0d2a8a; border: 2px solid #0d2a8a; }
+
+/* ── INSIGHT BAR ── */
+.insight-bar { display: none; background: #f0f5ff; border: 2px solid #0d2a8a; border-radius: 4px; padding: 14px 18px; }
+.insight-bar.visible { display: block; }
+.insight-bar strong { display: block; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0d2a8a; margin-bottom: 6px; }
+.insight-bar span { font-size: 17px; color: #000; }
+
+/* ── LOADING ── */
+.loading-pulse { display: inline-flex; gap: 5px; align-items: center; }
+.loading-pulse span { width: 8px; height: 8px; background: currentColor; border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+.loading-pulse span:nth-child(2) { animation-delay: 0.2s; }
+.loading-pulse span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
+
+hr.divider { border: none; border-top: 2px solid #0d2a8a; }
+
+/* ── HISTORY TAB ── */
+.history-header { display: flex; align-items: center; justify-content: space-between; }
+.history-header h2 { font-size: 22px; font-weight: 700; color: #0d2a8a; }
+.history-stats { font-size: 17px; color: #333; }
+.clear-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: #a02020;
+  background: none;
+  border: 2px solid #a02020;
+  border-radius: 4px;
+  padding: 8px 18px;
+  cursor: pointer;
+}
+.clear-btn:hover { background: #fde0e0; }
+
+.history-empty { padding: 60px 40px; text-align: center; font-size: 18px; color: #333; border: 3px dashed #0d2a8a; border-radius: 4px; }
+
+.history-list { display: flex; flex-direction: column; gap: 16px; }
+.h-card { border: 2px solid #0d2a8a; border-radius: 4px; overflow: hidden; background: #ffffff; }
+.h-card-header { background: #e8eeff; border-bottom: 2px solid #0d2a8a; padding: 12px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.h-date { font-size: 17px; font-weight: 700; color: #000; }
+.h-cat  { font-size: 15px; font-weight: 700; background: #ffffff; border: 2px solid #0d2a8a; border-radius: 20px; padding: 3px 12px; color: #0d2a8a; }
+.h-tone { font-size: 15px; font-weight: 700; background: #0d2a8a; border-radius: 20px; padding: 3px 12px; color: #ffffff; }
+.h-edited { font-size: 15px; font-weight: 700; background: #e0f5ea; border: 2px solid #60b880; border-radius: 20px; padding: 3px 12px; color: #0a3d20; }
+.h-card-body { padding: 16px 18px; font-size: 17px; line-height: 1.65; color: #000; white-space: pre-wrap; max-height: 140px; overflow: hidden; position: relative; }
+.h-card-body::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(transparent, white); }
+.h-card-footer { padding: 10px 18px; border-top: 2px solid #0d2a8a; display: flex; gap: 10px; background: #e8eeff; }
+.h-use-btn, .h-del-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  border: 2px solid #0d2a8a;
+  border-radius: 3px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.h-use-btn { background: #ffffff; color: #0d2a8a; }
+.h-use-btn:hover { background: #0d2a8a; color: #ffffff; }
+.h-del-btn { background: none; color: #a02020; border-color: #a02020; margin-left: auto; }
+.h-del-btn:hover { background: #fde0e0; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #0d2a8a; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LOTUS EVANGELIST</h1>
+  <span class="sub">LinkedIn Post Generator</span>
+  <span id="day-badge" class="day-badge">—</span>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('compose')">✦ COMPOSE</div>
+  <div class="tab" onclick="switchTab('history')">◷ HISTORY</div>
+</div>
+
+<!-- ═══ COMPOSE ═══ -->
+<div id="tab-compose" class="tab-panel active">
+
+  <aside class="panel-left">
+
+    <div>
+      <div class="section-label">Content Category</div>
+      <div class="cat-grid">
+        <button class="cat-btn active" data-cat="domino">HCL Domino</button>
+        <button class="cat-btn" data-cat="modernization">Modernization</button>
+        <button class="cat-btn" data-cat="leadership">Leadership</button>
+        <button class="cat-btn" data-cat="sales">Sales / GTM</button>
+        <button class="cat-btn" data-cat="ai">AI & Tech</button>
+        <button class="cat-btn" data-cat="advisory">Advisory / Hiring</button>
+        <button class="cat-btn" data-cat="culture">Culture / Career</button>
+        <button class="cat-btn" data-cat="random">Wildcard</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="topic">Topic / Angle / Seed Idea</label>
+      <textarea id="topic" rows="4" placeholder="e.g. Why CIOs keep delaying migrations until it's a crisis&#10;&#10;A keyword, story, situation, or observation is fine."></textarea>
+    </div>
+
+    <div>
+      <div class="section-label">Tone</div>
+      <div class="tone-grid">
+        <button class="tone-btn active" data-tone="practitioner">Practitioner Insight</button>
+        <button class="tone-btn" data-tone="thought-leader">Thought Leadership</button>
+        <button class="tone-btn" data-tone="story">War Story</button>
+        <button class="tone-btn" data-tone="question">Provocative Question</button>
+        <button class="tone-btn" data-tone="tip">Tip / How-To</button>
+        <button class="tone-btn" data-tone="cfocio">CFO / CIO Framing</button>
+        <button class="tone-btn" data-tone="hiring">Hire Me Signal</button>
+        <button class="tone-btn" data-tone="unpopular">Unpopular Opinion</button>
+        <button class="tone-btn" data-tone="thread">Numbered List Post</button>
+        <button class="tone-btn" data-tone="behind">Behind The Scenes</button>
+        <button class="tone-btn" data-tone="retrospective">Retrospective</button>
+        <button class="tone-btn" data-tone="myth">Myth Busting</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="post-day">Schedule For</label>
+      <select id="post-day">
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+        <option>Thursday</option><option>Friday</option>
+      </select>
+    </div>
+
+    <hr class="divider">
+
+    <div>
+      <div class="section-label">Signature Touches</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="toggle-row">
+          <span class="lbl">Hidden Music Lyric</span>
+          <label class="toggle"><input type="checkbox" id="lyric-toggle" checked><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="lbl">Root Beer / Candy Corn / Pinball</span>
+          <label class="toggle"><input type="checkbox" id="kb-toggle"><span class="slider"></span></label>
+        </div>
+        <p class="hint">Pinball ref auto-fires on Fridays. Toggle on to force it now.</p>
+      </div>
+    </div>
+
+    <div id="insight-bar" class="insight-bar">
+      <strong>🧠 Learning From Your Edits</strong>
+      <span id="insight-text"></span>
+    </div>
+
+    <button class="generate-btn" id="gen-btn" onclick="generatePost()">
+      ✦ Generate Post
+    </button>
+
+  </aside>
+
+  <main class="panel-right">
+    <div id="status" class="status-bar"></div>
+
+    <div id="placeholder" class="placeholder-state">
+      <div class="big">✦</div>
+      <p>Pick a category, enter a topic, choose a tone, and click Generate.</p>
+    </div>
+
+    <div id="post-card" class="result-card">
+      <div class="card-header">
+        <span class="card-header-label">LinkedIn Post</span>
+        <div class="card-actions">
+          <button class="small-btn" onclick="regenerate()">↺ Regenerate</button>
+          <button class="copy-btn" id="copy-btn" onclick="copyPost()">Copy</button>
+        </div>
+      </div>
+      <textarea id="post-text" rows="14" spellcheck="true" oninput="onPostEdit()"></textarea>
+      <div class="post-meta">
+        <span id="char-count">0 chars</span>
+        <span id="word-count">0 words</span>
+        <span id="hashtag-count">0 hashtags</span>
+        <span id="read-time">~0 min read</span>
+      </div>
+    </div>
+
+    <div id="save-bar" class="save-bar">
+      <p>Post edited — save so future posts learn from your changes?</p>
+      <button class="save-btn" onclick="savePost()">Save To History</button>
+    </div>
+
+    <div id="egg-bar" class="egg-bar">
+      <strong>🎵 Hidden Lyric</strong>
+      <span id="egg-text"></span>
+    </div>
+
+    <div id="send-row" class="send-row">
+      <input type="email" class="email-input" id="email" placeholder="keith@keithbrooks.com" value="keith@keithbrooks.com">
+      <button class="send-btn" onclick="sendToGmail()">✉ Send Draft</button>
+    </div>
+  </main>
+</div>
+
+<!-- ═══ HISTORY ═══ -->
+<div id="tab-history" class="tab-panel">
+  <div class="history-header">
+    <h2>Post History</h2>
+    <div style="display:flex;gap:14px;align-items:center">
+      <span class="history-stats" id="history-stats"></span>
+      <button class="clear-btn" onclick="clearHistory()">Clear All</button>
+    </div>
+  </div>
+  <div id="history-list"></div>
+</div>
+
+<script>
+let selectedTone = 'practitioner';
+let selectedCat  = 'domino';
+let currentPost  = '';
+let generatedPost = '';
+let currentMeta  = {};
+let postEdited   = false;
+
+// Day badge
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const todayIdx  = new Date().getDay();
+document.getElementById('day-badge').textContent = DAY_NAMES[todayIdx].toUpperCase();
+let d = (todayIdx + 1) % 7; if(d===0)d=1; if(d===6)d=1;
+const sel = document.getElementById('post-day');
+for(let o of sel.options) if(o.value===DAY_NAMES[d]){o.selected=true;break;}
+if(todayIdx===5) document.getElementById('kb-toggle').checked = true;
+
+// Tab switch
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['compose','history'][i]===name));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='history') renderHistory();
+}
+
+// Button selectors
+document.querySelectorAll('.tone-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tone-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); selectedTone=b.dataset.tone;
+}));
+document.querySelectorAll('.cat-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); selectedCat=b.dataset.cat;
+}));
+
+// Post textarea
+function onPostEdit() {
+  currentPost = document.getElementById('post-text').value;
+  updateMeta();
+  if(currentPost !== generatedPost && generatedPost) {
+    postEdited = true;
+    document.getElementById('save-bar').classList.add('visible');
+  }
+}
+function updateMeta() {
+  const len=currentPost.length, words=currentPost.trim()?currentPost.trim().split(/\s+/).length:0;
+  const tags=(currentPost.match(/#\w+/g)||[]).length, mins=Math.max(1,Math.round(words/200));
+  const cc=document.getElementById('char-count');
+  cc.textContent=len+' chars'; cc.className=len>2800?'warn':len>=600?'ok':'';
+  document.getElementById('word-count').textContent=words+' words';
+  document.getElementById('hashtag-count').textContent=tags+' hashtag'+(tags!==1?'s':'');
+  document.getElementById('read-time').textContent='~'+mins+' min read';
+}
+
+// Copy — select + execCommand with clipboard fallback
+function copyPost() {
+  const ta = document.getElementById('post-text');
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+  try { document.execCommand('copy'); } catch(e){}
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).catch(()=>{});
+  }
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = '✓ Copied'; btn.classList.add('copied');
+  setTimeout(()=>{ btn.textContent='Copy'; btn.classList.remove('copied'); }, 2000);
+  window.getSelection && window.getSelection().removeAllRanges();
+}
+
+// Storage helpers
+async function loadHistory() {
+  try { const r=await window.storage.get('post-history'); return r?JSON.parse(r.value):[]; } catch(e){ return []; }
+}
+async function saveHistory(arr) {
+  try { await window.storage.set('post-history', JSON.stringify(arr)); } catch(e){}
+}
+async function loadEditPatterns() {
+  try { const r=await window.storage.get('edit-patterns'); return r?JSON.parse(r.value):[]; } catch(e){ return []; }
+}
+async function saveEditPatterns(arr) {
+  try { await window.storage.set('edit-patterns', JSON.stringify(arr)); } catch(e){}
+}
+
+async function savePost() {
+  const hist = await loadHistory();
+  const entry = {
+    id: Date.now(), savedAt: new Date().toISOString(),
+    day: document.getElementById('post-day').value,
+    cat: selectedCat, tone: selectedTone,
+    topic: document.getElementById('topic').value.trim(),
+    generated: generatedPost, final: currentPost,
+    wasEdited: generatedPost !== currentPost,
+    lyric: currentMeta.hidden_lyric||'', tip: currentMeta.posting_tip||''
+  };
+  hist.unshift(entry);
+  if(hist.length>90) hist.splice(90);
+  await saveHistory(hist);
+  if(entry.wasEdited) {
+    const patterns = await loadEditPatterns();
+    patterns.unshift({ id: entry.id, cat: entry.cat, tone: entry.tone, note: diffNote(entry.generated, entry.final) });
+    if(patterns.length>20) patterns.splice(20);
+    await saveEditPatterns(patterns);
+  }
+  document.getElementById('save-bar').classList.remove('visible');
+  postEdited = false;
+  showStatus('success','✓ Saved to history. Future posts will learn from your edits.');
+  await refreshInsight();
+}
+
+function diffNote(orig, final) {
+  const diff = final.length - orig.length;
+  const notes = [];
+  if(diff < -80) notes.push('prefers shorter posts (trimmed ~'+Math.abs(diff)+' chars)');
+  if(diff > 80)  notes.push('tends to expand posts (added ~'+diff+' chars)');
+  const oHash=(orig.match(/#\w+/g)||[]).length, fHash=(final.match(/#\w+/g)||[]).length;
+  if(fHash>oHash) notes.push('adds more hashtags'); if(fHash<oHash) notes.push('removes hashtags');
+  const oL=orig.split('\n').length, fL=final.split('\n').length;
+  if(fL>oL+1) notes.push('adds more line breaks'); if(fL<oL-1) notes.push('tightens formatting');
+  return notes.length ? notes.join('; ') : 'made light edits';
+}
+
+async function refreshInsight() {
+  const patterns = await loadEditPatterns();
+  if(patterns.length < 2) return;
+  const notes = patterns.map(p=>p.note).join(' | ');
+  const shorter=(notes.match(/shorter/g)||[]).length, longer=(notes.match(/longer/g)||[]).length;
+  const hashtags=(notes.match(/hashtag/g)||[]).length, linebreaks=(notes.match(/line break/g)||[]).length;
+  const insight=[];
+  if(shorter>longer&&shorter>=2) insight.push('you consistently trim posts shorter');
+  if(longer>shorter&&longer>=2)  insight.push('you tend to expand on generated drafts');
+  if(hashtags>=2) insight.push('you often adjust hashtags manually');
+  if(linebreaks>=2) insight.push('you prefer more paragraph breaks');
+  if(!insight.length&&patterns.length>=3) insight.push('making light, consistent edits — good sign the voice is landing');
+  if(insight.length) {
+    document.getElementById('insight-text').textContent = 'Based on '+patterns.length+' edited posts: '+insight.join(', ')+'.';
+    document.getElementById('insight-bar').classList.add('visible');
+  }
+}
+
+const TONE_DESC = {
+  'practitioner':  'Write as a seasoned practitioner sharing a real-world observation earned from the trenches. Specific, opinionated, no hedging.',
+  'thought-leader':'Broad perspective on where the industry is heading. Bold, authoritative, forward-looking.',
+  'story':         'Open with a vivid client scenario or personal moment. Pivot to the hard-won lesson.',
+  'question':      'Lead with a provocative question challenging assumptions held by executives. Answer it with conviction.',
+  'tip':           'One concrete, actionable technique. Show you know the detail. Practical and specific.',
+  'cfocio':        'Frame everything from the financial/strategic lens of a CFO or CIO. Risk, cost, compliance, competitive positioning.',
+  'hiring':        'Naturally and credibly position Keith as the person to call — without being cringe. Weave credentials in organically.',
+  'unpopular':     'Contrarian but defensible position. Blunt hook. Acknowledge the pushback, then hold the line.',
+  'thread':        'Numbered list post, 5–8 punchy insights. Intro line hooks, outro line lands.',
+  'behind':        'Pull back the curtain on how Keith actually works. Builds trust and curiosity.',
+  'retrospective': 'Lesson learned from a project, mistake, or decision. First-person, honest, clear takeaway.',
+  'myth':          'Name a specific myth. Bust it with evidence and experience. End with the truth.',
+};
+const CAT_CONTEXT = {
+  'domino':       'Rooted in HCL Domino, Notes, LotusScript, or the Domino ecosystem. Can include DRAPI, migration strategy, version upgrades, licensing, admin/dev topics.',
+  'modernization':'Legacy system modernization broadly — technical debt, migration ROI, CFO/CIO decision-making, digital transformation.',
+  'leadership':   'Enterprise leadership — managing technical teams, organizational change, working with boards, executive decision-making.',
+  'sales':        'B2B sales, go-to-market strategy, finding and closing enterprise deals, how buyers and sellers interact in complex tech sales.',
+  'ai':           'AI in the enterprise — practical use, hype vs reality, what actually works, risks, how Keith uses AI in his advisory practice.',
+  'advisory':     'Positions Keith as a sought-after independent advisor — what he does, why it matters. Subtly or directly signals availability.',
+  'culture':      'Tech industry culture, careers, remote work, conference culture, or the human side of enterprise IT.',
+  'random':       'Pick any topic a technology advisor with Keith\'s background might authentically write about. Make it interesting and unexpected.',
+};
+
+async function buildSystem() {
+  const patterns = await loadEditPatterns();
+  let editContext = '';
+  if(patterns.length > 0) {
+    editContext = '\n\nEDIT PATTERNS LEARNED FROM KEITH\'S PAST EDITS:\n'+patterns.slice(0,8).map(p=>`- ${p.tone}/${p.cat}: ${p.note}`).join('\n');
+  }
+  return `You are ghostwriting LinkedIn posts for Keith Brooks — HCL Ambassador 2020–2026, enterprise modernization advisor, independent consultant at B2B Whisperer / The Rockteam.
+
+KEITH'S VOICE:
+- Direct, unfiltered, slightly blunt. No corporate speak. Never "In today's rapidly evolving landscape."
+- Short punchy sentences mixed with longer ones. Variable rhythm.
+- Honest about uncertainty: "I don't know." "I was wrong about this."
+- Parenthetical asides (like this one) that add personality.
+- Talks to readers as peers. Uses "you" and "we" naturally.
+- Dry wit. Not joke-a-minute, but genuinely funny when it lands.
+- Ends with a reflective question or bold statement — rarely a hard sell.
+- Hashtags at the END only, never inline. 4–6 relevant ones.
+- No emojis. No bullet lists (except numbered list tone). Just paragraphs.
+- Optimal length: 900–1600 characters. Never below 700, never above 2000.
+
+AUDIENCE GROWTH GOAL: Every post should grow Keith's following AND signal to CFOs, CIOs, and procurement leaders that he is the person to call.
+
+SIGNATURE QUIRKS — apply when instructed:
+1. HIDDEN LYRIC: Take an EXACT verbatim lyric from a well-known song and embed it word-for-word into the prose so naturally that a casual reader won't notice it but a sharp reader will smile. The lyric must be quoted exactly as written/sung — do not paraphrase or alter it. It must grammatically fit the sentence it appears in.
+2. KB REFERENCE: Work in a casual organic mention of root beer, candy corn, or pinball — as a metaphor, throwaway observation, or memory.
+${editContext}
+
+OUTPUT FORMAT: Return ONLY valid JSON, no markdown, no backticks:
+{
+  "post": "Full LinkedIn post text",
+  "hidden_lyric": "The exact lyric words used, followed by — Song Title, Artist",
+  "kb_ref": "The phrase used, or empty string",
+  "posting_tip": "One short timing or optimization tip"
+}`;
+}
+
+function buildUser() {
+  const topic = document.getElementById('topic').value.trim() || 'Choose an appropriate topic for my audience and voice.';
+  const day   = document.getElementById('post-day').value;
+  const lyric = document.getElementById('lyric-toggle').checked;
+  const kbRef = document.getElementById('kb-toggle').checked;
+  return `Write a LinkedIn post for ${day} publication.
+Content category: ${CAT_CONTEXT[selectedCat]}
+Topic seed: ${topic}
+Tone direction: ${TONE_DESC[selectedTone]}
+Hidden lyric (exact verbatim quote embedded naturally): ${lyric?'YES':'NO'}
+KB reference (root beer/candy corn/pinball): ${kbRef?'YES':'NO'}
+Output ONLY the JSON object.`;
+}
+
+async function generatePost() {
+  const btn = document.getElementById('gen-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="loading-pulse"><span></span><span></span><span></span></span> Writing…';
+  showStatus('info','Claude is drafting your post…');
+  document.getElementById('placeholder').style.display='none';
+  document.getElementById('egg-bar').classList.remove('visible');
+  document.getElementById('save-bar').classList.remove('visible');
+  postEdited=false;
+  await refreshInsight();
+  try {
+    const sys = await buildSystem();
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system:sys, messages:[{role:'user',content:buildUser()}] })
+    });
+    const data = await resp.json();
+    const raw  = data.content.map(b=>b.text||'').join('');
+    let parsed;
+    try { parsed=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e){ throw new Error('Could not parse response — try again.'); }
+
+    currentPost = parsed.post||'';
+    generatedPost = currentPost;
+    currentMeta = parsed;
+
+    document.getElementById('post-text').value = currentPost;
+    updateMeta();
+    document.getElementById('post-card').classList.add('visible');
+    document.getElementById('send-row').classList.add('visible');
+
+    if(parsed.hidden_lyric){
+      document.getElementById('egg-text').textContent = '"'+parsed.hidden_lyric+'"';
+      document.getElementById('egg-bar').classList.add('visible');
+    }
+
+    // Auto-save generated version
+    const hist = await loadHistory();
+    hist.unshift({ id:Date.now(), savedAt:new Date().toISOString(), day:document.getElementById('post-day').value, cat:selectedCat, tone:selectedTone, topic:document.getElementById('topic').value.trim(), generated:currentPost, final:currentPost, wasEdited:false, lyric:parsed.hidden_lyric||'', tip:parsed.posting_tip||'' });
+    if(hist.length>90) hist.splice(90);
+    await saveHistory(hist);
+
+    const tip = parsed.posting_tip ? ' · '+parsed.posting_tip : '';
+    showStatus('success','✓ Post ready. Edit above then save to history.'+tip);
+  } catch(err){
+    showStatus('error','Error: '+err.message);
+    document.getElementById('placeholder').style.display='flex';
+  } finally {
+    btn.disabled=false;
+    btn.innerHTML='✦ Generate Post';
+  }
+}
+
+function regenerate(){ generatePost(); }
+
+async function renderHistory() {
+  const hist = await loadHistory();
+  document.getElementById('history-stats').textContent = hist.length+' posts saved';
+  const container = document.getElementById('history-list');
+  if(!hist.length){ container.innerHTML='<div class="history-empty">No posts saved yet. Generate a post to see it here.</div>'; return; }
+  container.innerHTML = hist.map(e=>{
+    const date = new Date(e.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const editedBadge = e.wasEdited ? '<span class="h-edited">Edited</span>' : '';
+    return `<div class="h-card">
+      <div class="h-card-header"><span class="h-date">${date} · ${e.day||''}</span><span class="h-cat">${e.cat||''}</span><span class="h-tone">${e.tone||''}</span>${editedBadge}</div>
+      <div class="h-card-body">${(e.final||e.generated||'').slice(0,320)}</div>
+      <div class="h-card-footer">
+        <button class="h-use-btn" onclick="loadFromHistory(${e.id})">↗ Load Into Editor</button>
+        <button class="h-del-btn" onclick="deleteEntry(${e.id})">✕ Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadFromHistory(id) {
+  const hist = await loadHistory();
+  const e = hist.find(x=>x.id===id);
+  if(!e) return;
+  document.getElementById('post-text').value = e.final||e.generated||'';
+  document.getElementById('topic').value = e.topic||'';
+  currentPost = document.getElementById('post-text').value;
+  generatedPost = e.generated||'';
+  updateMeta();
+  document.getElementById('post-card').classList.add('visible');
+  document.getElementById('placeholder').style.display='none';
+  document.getElementById('send-row').classList.add('visible');
+  switchTab('compose');
+  showStatus('info','Loaded from history. Edit and save if you make changes.');
+}
+
+async function deleteEntry(id) {
+  await saveHistory((await loadHistory()).filter(x=>x.id!==id));
+  renderHistory();
+}
+
+async function clearHistory() {
+  if(!confirm('Delete all saved posts and edit patterns?')) return;
+  try{ await window.storage.delete('post-history'); }catch(e){}
+  try{ await window.storage.delete('edit-patterns'); }catch(e){}
+  renderHistory();
+  document.getElementById('insight-bar').classList.remove('visible');
+}
+
+function sendToGmail() {
+  const email=document.getElementById('email').value.trim();
+  const post=document.getElementById('post-text').value;
+  const day=document.getElementById('post-day').value;
+  if(!email){showStatus('error','Enter your email address.');return;}
+  if(!post){showStatus('error','No post to send.');return;}
+  const tip=currentMeta.posting_tip?'\n📌 Tip: '+currentMeta.posting_tip:'';
+  const lyric=currentMeta.hidden_lyric?'\n🎵 Lyric: '+currentMeta.hidden_lyric:'';
+  const kb=currentMeta.kb_ref?'\n🎳 KB ref: '+currentMeta.kb_ref:'';
+  const subj=encodeURIComponent('LinkedIn draft — '+day);
+  const body=encodeURIComponent('📅 Scheduled: '+day+tip+lyric+kb+'\n\n━━━━━━━━━━━━━━━━━━━━\n'+post+'\n\n━━━━━━━━━━━━━━━━━━━━\nGenerated by Lotus Evangelist');
+  window.location.href='mailto:'+email+'?subject='+subj+'&body='+body;
+  showStatus('success','✓ Opening your mail app with the draft.');
+}
+
+function showStatus(type, msg) {
+  const el=document.getElementById('status');
+  el.className='status-bar visible '+type;
+  el.textContent=msg;
+}
+</script>
+</body>
+</html>
