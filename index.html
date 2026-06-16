@@ -182,7 +182,7 @@ hr.divider { border: none; border-top: 1px solid #0d2a8a; }
 <header>
   <h1>LOTUS EVANGELIST</h1>
   <span class="sub">LinkedIn Post Generator</span>
-  <span class="ver">v34</span>
+  <span class="ver">v35</span>
   <span id="day-badge" class="day-badge">—</span>
 </header>
 
@@ -411,21 +411,19 @@ function setBufSt(ok){const el=document.getElementById('buf-status');el.textCont
 async function loadBufferProfiles(){
   const token=document.getElementById('buf-token-settings').value.trim()||getBuf();
   if(!token){alert('Enter your Buffer access token first.');return;}
-  lSet('le-buf',token);document.getElementById('buf-key').value=token;setBufSt(true);
-  const hint=document.getElementById('buf-profile-hint');hint.textContent='Loading profiles…';
+  lSet('le-buf',token);
+  document.getElementById('buf-key').value=token;
+  setBufSt(true);
+  const hint=document.getElementById('buf-profile-hint');
+  hint.textContent='Loading profiles…';
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':getAnth(),'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
-        mcp_servers:[{type:'url',url:'https://mcp.buffer.com/mcp',name:'buffer-mcp'}],
-        messages:[{role:'user',content:'List all my Buffer social profiles. Return ONLY a JSON array: [{"id":"...","name":"...","service":"..."}]. No markdown, no explanation.'}]})});
-    const data=await resp.json();
-    if(data.error)throw new Error(data.error.message);
-    const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    const profiles=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    const li=profiles.filter(p=>(p.service||'').toLowerCase().includes('linkedin'));
-    if(!li.length){hint.textContent='No LinkedIn profiles found in Buffer.';return;}
-    renderProfiles(li);hint.textContent=li.length+' LinkedIn profile(s) found. Click Select to choose one.';
+    const resp=await fetch('https://api.bufferapp.com/1/profiles.json?access_token='+encodeURIComponent(token));
+    if(!resp.ok) throw new Error('Buffer API error: '+resp.status+' — check your token.');
+    const profiles=await resp.json();
+    const li=profiles.filter(p=>p.service==='linkedin'||p.service==='linkedin_page');
+    if(!li.length){hint.textContent='No LinkedIn profiles found in your Buffer account.';return;}
+    renderProfiles(li);
+    hint.textContent=li.length+' LinkedIn profile(s) found. Click Select to choose one.';
   }catch(err){hint.textContent='Error: '+err.message;}
 }
 
@@ -433,9 +431,22 @@ function renderProfiles(profiles){
   const list=document.getElementById('profile-list');
   const sel=document.getElementById('buf-profile-select');
   sel.innerHTML='<option value="">— Select LinkedIn profile —</option>';
-  list.innerHTML=profiles.map(p=>`<div class="profile-item" id="pi-${p.id}"><span>${p.name||p.id}</span><span class="profile-type">${p.service||'linkedin'}</span><button class="profile-sel-btn ${bufProfileId===p.id?'selected':''}" onclick="selectProfile('${p.id}','${(p.name||p.id).replace(/'/g,"\\'")}')"> ${bufProfileId===p.id?'✓ Selected':'Select'}</button></div>`).join('');
-  profiles.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name||p.id;sel.appendChild(o);});
-  const saved=lGet('le-buf-pid');if(saved){const m=profiles.find(p=>p.id===saved);if(m)selectProfile(m.id,m.name||m.id);}
+  list.innerHTML=profiles.map(p=>`
+    <div class="profile-item" id="pi-${p.id}">
+      <span>${p.formatted_username||p.id}</span>
+      <span class="profile-type">${p.service||'linkedin'}</span>
+      <button class="profile-sel-btn ${bufProfileId===p.id?'selected':''}"
+        onclick="selectProfile('${p.id}','${(p.formatted_username||p.id).replace(/'/g,"\\'")}')">
+        ${bufProfileId===p.id?'✓ Selected':'Select'}
+      </button>
+    </div>`).join('');
+  profiles.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.id; o.textContent=p.formatted_username||p.id;
+    sel.appendChild(o);
+  });
+  const saved=lGet('le-buf-pid');
+  if(saved){const m=profiles.find(p=>p.id===saved);if(m)selectProfile(m.id,m.formatted_username||m.id);}
 }
 
 function selectProfile(id,name){
@@ -447,23 +458,37 @@ function selectProfile(id,name){
 }
 
 async function sendToBuffer(mode){
-  const token=getBuf(),pid=document.getElementById('buf-profile-select').value||bufProfileId,post=document.getElementById('post-text').value.trim();
-  if(!token){showStatus('error','Add your Buffer token first.');return;}
+  const token=getBuf();
+  const pid=document.getElementById('buf-profile-select').value||bufProfileId;
+  const post=document.getElementById('post-text').value.trim();
+  if(!token){showStatus('error','Add your Buffer token in the header or Settings.');return;}
   if(!pid){showStatus('error','Select a LinkedIn profile in Settings first.');return;}
   if(!post){showStatus('error','No post content to send.');return;}
-  if(!getAnth()){showStatus('error','Anthropic API key required.');return;}
   document.querySelectorAll('.buf-btn').forEach(b=>b.disabled=true);
   showStatus('info',mode==='draft'?'Saving to Buffer as draft…':'Adding to Buffer queue…');
-  const instr=mode==='draft'?`Save this as a DRAFT in Buffer for LinkedIn profile ID "${pid}". Do NOT queue or publish. Post:\n\n${post}`:`Add this to the Buffer queue for LinkedIn profile ID "${pid}". Post:\n\n${post}`;
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':getAnth(),'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,mcp_servers:[{type:'url',url:'https://mcp.buffer.com/mcp',name:'buffer-mcp'}],messages:[{role:'user',content:instr}]})});
-    const data=await resp.json();if(data.error)throw new Error(data.error.message);
-    const hist=await getHist();if(hist.length&&hist[0].final===post){hist[0].buffered=true;hist[0].bufMode=mode;await setHist(hist);}
-    showStatus('success',mode==='draft'?'✓ Saved to Buffer as draft. Review at buffer.com':'✓ Added to Buffer queue. Will post at your scheduled time.');
-  }catch(err){showStatus('error','Buffer error: '+err.message);}
-  finally{document.querySelectorAll('.buf-btn').forEach(b=>b.disabled=false);}
+    const params=new URLSearchParams();
+    params.append('text', post);
+    params.append('profile_ids[]', pid);
+    params.append('access_token', token);
+    if(mode==='draft') params.append('shorten','false');
+    const resp=await fetch('https://api.bufferapp.com/1/updates/create.json',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:params.toString()
+    });
+    const data=await resp.json();
+    if(!resp.ok||data.error) throw new Error(data.error||'Buffer API error '+resp.status);
+    const hist=await getHist();
+    if(hist.length){hist[0].buffered=true;hist[0].bufMode=mode;await setHist(hist);}
+    showStatus('success',mode==='draft'
+      ?'✓ Saved to Buffer as draft. Review at buffer.com before publishing.'
+      :'✓ Added to Buffer queue. Will post at your next scheduled time.');
+  }catch(err){
+    showStatus('error','Buffer error: '+err.message);
+  }finally{
+    document.querySelectorAll('.buf-btn').forEach(b=>b.disabled=false);
+  }
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
