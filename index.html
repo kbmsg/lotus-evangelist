@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lotus Evangelist v34</title>
+<title>Lotus Evangelist v35</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -552,7 +552,13 @@ async function generatePost(){
   document.getElementById('egg-bar').classList.remove('visible');document.getElementById('save-bar').classList.remove('visible');document.getElementById('buffer-row').classList.remove('visible');
   edited=false;await refreshInsight();
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':ak,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:await buildSys(),messages:[{role:'user',content:buildUser()}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{
+  'Content-Type':'application/json',
+  'x-api-key':ak,
+  'anthropic-version':'2023-06-01',
+  'anthropic-dangerous-allow-browser':'true',
+  'Access-Control-Allow-Origin':'*'
+},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:await buildSys(),messages:[{role:'user',content:buildUser()}]})});
     const data=await resp.json();if(data.error)throw new Error(data.error.message);
     const raw=data.content.map(b=>b.text||'').join('');
     let parsed;try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch(e){throw new Error('Could not parse response.');}
