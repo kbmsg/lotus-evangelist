@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotus Evangelist v36</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: 'DM Mono', monospace; font-size: 13px; background: #fff; color: #000; }
+
+header { background: #0d2a8a; color: #fff; padding: 8px 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+header h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
+header .sub { font-size: 13px; opacity: 0.85; }
+header .ver { font-size: 11px; opacity: 0.6; }
+.day-badge { margin-left: auto; background: #fff; color: #0d2a8a; font-size: 15px; font-weight: 700; padding: 4px 12px; border-radius: 3px; letter-spacing: 0.06em; }
+
+.key-bar { background: #f0f5ff; border-bottom: 2px solid #0d2a8a; padding: 6px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.key-bar label { font-size: 12px; font-weight: 700; color: #0d2a8a; white-space: nowrap; }
+.key-input { font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 4px 8px; outline: none; width: 200px; }
+.key-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.key-btn:hover { background: #1a40c0; }
+.key-btn.green { background: #168a46; }
+.key-btn.green:hover { background: #0f5c2e; }
+.key-sep { width: 1px; height: 20px; background: #0d2a8a; opacity: 0.3; flex-shrink: 0; }
+.key-status { font-size: 11px; font-weight: 700; white-space: nowrap; }
+.key-status.ok { color: #145c35; }
+.key-status.no { color: #a02020; }
+
+.tabs { display: flex; background: #e8eeff; border-bottom: 2px solid #0d2a8a; flex-shrink: 0; }
+.tab { padding: 7px 18px; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; color: #0d2a8a; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.tab.active { background: #fff; border-bottom-color: #0d2a8a; }
+.tab:hover:not(.active) { background: #d8e6fc; }
+
+.app-body { display: flex; flex-direction: column; height: calc(100vh - 106px); overflow: hidden; }
+.tab-panel { display: none; flex: 1; overflow: hidden; }
+.tab-panel.active { display: flex; }
+
+#tab-compose { flex-direction: row; }
+.panel-left { width: 330px; flex-shrink: 0; border-right: 2px solid #0d2a8a; background: #f0f5ff; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+.panel-right { flex: 1; padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; background: #fff; overflow: hidden; }
+#tab-history, #tab-settings { flex-direction: column; padding: 16px 24px; gap: 14px; overflow-y: auto; background: #fff; }
+
+.section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0d2a8a; border-bottom: 1px solid #0d2a8a; padding-bottom: 2px; margin-bottom: 4px; }
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label { font-size: 12px; font-weight: 700; }
+.field textarea, .field select { font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 5px 8px; outline: none; width: 100%; }
+.field textarea { resize: none; height: 56px; }
+.field textarea:focus, .field select:focus { background: #f0f5ff; }
+
+.cat-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+.cat-btn { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; color: #0d2a8a; background: #fff; border: 2px solid #0d2a8a; border-radius: 20px; padding: 3px 9px; cursor: pointer; }
+.cat-btn:hover { background: #d8e6fc; }
+.cat-btn.active { background: #0d2a8a; color: #fff; }
+
+.tone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.tone-btn { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; color: #0d2a8a; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 5px 6px; cursor: pointer; text-align: center; line-height: 1.2; }
+.tone-btn:hover { background: #d8e6fc; }
+.tone-btn.active { background: #0d2a8a; color: #fff; }
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.toggle-row .lbl { font-size: 12px; font-weight: 700; }
+.toggle { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; inset: 0; background: #aac0e8; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+.slider::before { content: ''; position: absolute; height: 14px; width: 14px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+input:checked + .slider { background: #0d2a8a; }
+input:checked + .slider::before { transform: translateX(18px); }
+.hint { font-size: 10px; color: #555; }
+hr.divider { border: none; border-top: 1px solid #0d2a8a; }
+
+.gen-btn { background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 9px 14px; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; }
+.gen-btn:hover { background: #1a40c0; }
+.gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.status-bar { display: none; padding: 7px 10px; border-radius: 3px; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.status-bar.visible { display: block; }
+.status-bar.success { background: #e0f5ea; color: #0a3d20; border: 2px solid #60b880; }
+.status-bar.error   { background: #fde0e0; color: #6a0a0a; border: 2px solid #e08080; }
+.status-bar.info    { background: #e8eeff; color: #0d2a8a; border: 2px solid #0d2a8a; }
+
+.placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; border: 2px dashed #0d2a8a; border-radius: 3px; }
+.placeholder .big { font-size: 36px; opacity: 0.15; }
+.placeholder p { font-size: 13px; max-width: 260px; line-height: 1.5; color: #333; }
+
+.result-card { border: 2px solid #0d2a8a; border-radius: 3px; overflow: hidden; display: none; flex-direction: column; flex: 1; min-height: 0; }
+.result-card.visible { display: flex; }
+.card-top { background: #e8eeff; border-bottom: 2px solid #0d2a8a; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.card-top-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0d2a8a; }
+.card-acts { display: flex; gap: 5px; }
+.sm-btn { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; color: #0d2a8a; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 3px 10px; cursor: pointer; }
+.sm-btn:hover { background: #0d2a8a; color: #fff; }
+.sm-btn.copied { background: #145c35; color: #fff; border-color: #145c35; }
+
+#post-text { font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.7; color: #000; background: #fff; border: none; width: 100%; padding: 12px; outline: none; resize: none; flex: 1; overflow-y: auto; }
+
+.post-meta { background: #e8eeff; border-top: 2px solid #0d2a8a; padding: 5px 12px; display: flex; gap: 12px; flex-shrink: 0; }
+.post-meta span { font-size: 11px; font-weight: 700; color: #0d2a8a; }
+.post-meta span.warn { color: #a02020; }
+.post-meta span.ok { color: #145c35; }
+
+.buffer-row { display: none; gap: 6px; align-items: center; flex-shrink: 0; padding: 6px 0; }
+.buffer-row.visible { display: flex; }
+.buf-select { font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #168a46; border-radius: 3px; padding: 5px 8px; outline: none; flex: 1; }
+.buf-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #168a46; color: #fff; border: none; border-radius: 3px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+.buf-btn:hover { background: #0f5c2e; }
+.buf-btn.draft { background: #fff; color: #168a46; border: 2px solid #168a46; }
+.buf-btn.draft:hover { background: #e0f5ea; }
+.buf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.save-bar { display: none; align-items: center; justify-content: space-between; gap: 8px; background: #fffbe8; border: 2px solid #a87520; border-radius: 3px; padding: 7px 12px; flex-shrink: 0; }
+.save-bar.visible { display: flex; }
+.save-bar p { font-size: 12px; font-weight: 700; }
+.save-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #a87520; color: #fff; border: none; border-radius: 3px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+
+.egg-bar { display: none; background: #e8eeff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 7px 12px; flex-shrink: 0; }
+.egg-bar.visible { display: block; }
+.egg-bar strong { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #0d2a8a; margin-bottom: 2px; }
+
+.send-row { display: none; gap: 8px; align-items: center; flex-shrink: 0; }
+.send-row.visible { display: flex; }
+.email-input { flex: 1; font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 6px 8px; outline: none; }
+.send-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #a87520; color: #fff; border: none; border-radius: 3px; padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+
+.insight-bar { display: none; background: #f0f5ff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 6px 10px; flex-shrink: 0; }
+.insight-bar.visible { display: block; }
+.insight-bar strong { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #0d2a8a; display: block; margin-bottom: 2px; }
+.insight-bar span { font-size: 11px; }
+
+.loading-pulse { display: inline-flex; gap: 4px; align-items: center; }
+.loading-pulse span { width: 6px; height: 6px; background: currentColor; border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+.loading-pulse span:nth-child(2) { animation-delay: 0.2s; }
+.loading-pulse span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
+
+/* proxy warning banner */
+.proxy-banner { display: none; background: #fffbe8; border-bottom: 2px solid #a87520; padding: 5px 16px; font-size: 11px; font-weight: 700; color: #7a4800; flex-shrink: 0; }
+.proxy-banner.visible { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.proxy-banner a { color: #7a4800; }
+
+.set-section { border: 2px solid #0d2a8a; border-radius: 3px; overflow: hidden; }
+.set-head { background: #e8eeff; border-bottom: 2px solid #0d2a8a; padding: 9px 14px; font-size: 13px; font-weight: 700; color: #0d2a8a; }
+.set-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.set-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.set-row label { font-size: 13px; font-weight: 700; min-width: 110px; }
+.set-input { flex: 1; min-width: 180px; font-family: 'DM Mono', monospace; font-size: 13px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 6px 10px; outline: none; }
+.set-btn { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+.set-btn:hover { background: #1a40c0; }
+.set-btn.green { background: #168a46; }
+.set-btn.green:hover { background: #0f5c2e; }
+.set-hint { font-size: 11px; color: #444; }
+.set-hint a { color: #0d2a8a; }
+.profile-list { display: flex; flex-direction: column; gap: 5px; }
+.profile-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 2px solid #0d2a8a; border-radius: 3px; background: #f0f5ff; }
+.profile-item span { flex: 1; font-size: 13px; font-weight: 700; }
+.profile-type { font-size: 11px; color: #0d2a8a; background: #d8e6fc; border-radius: 10px; padding: 2px 8px; }
+.profile-sel-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 4px 10px; cursor: pointer; }
+.profile-sel-btn.selected { background: #168a46; }
+
+/* proxy URL field highlight */
+.set-input.proxy-url { border-color: #a87520; background: #fffbe8; }
+
+.hist-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+.hist-head h2 { font-size: 15px; font-weight: 700; color: #0d2a8a; }
+.hist-stats { font-size: 12px; color: #333; }
+.danger-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; color: #a02020; background: none; border: 2px solid #a02020; border-radius: 3px; padding: 4px 12px; cursor: pointer; }
+.hist-empty { padding: 40px; text-align: center; font-size: 13px; color: #333; border: 2px dashed #0d2a8a; border-radius: 3px; }
+.hist-list { display: flex; flex-direction: column; gap: 8px; }
+.h-card { border: 2px solid #0d2a8a; border-radius: 3px; overflow: hidden; }
+.h-card-head { background: #e8eeff; border-bottom: 2px solid #0d2a8a; padding: 7px 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.h-date { font-size: 12px; font-weight: 700; }
+.h-tag { font-size: 11px; font-weight: 700; border-radius: 20px; padding: 2px 9px; }
+.h-tag.cat { background: #fff; border: 2px solid #0d2a8a; color: #0d2a8a; }
+.h-tag.tone { background: #0d2a8a; color: #fff; }
+.h-tag.edited { background: #e0f5ea; border: 2px solid #60b880; color: #0a3d20; }
+.h-tag.buffered { background: #e0f5ea; border: 2px solid #168a46; color: #0f5c2e; }
+.h-card-body { padding: 10px 12px; font-size: 12px; line-height: 1.5; white-space: pre-wrap; max-height: 80px; overflow: hidden; position: relative; }
+.h-card-body::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 24px; background: linear-gradient(transparent,#fff); }
+.h-card-foot { padding: 7px 12px; border-top: 2px solid #0d2a8a; display: flex; gap: 6px; background: #e8eeff; }
+.h-act-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; border: 2px solid #0d2a8a; border-radius: 3px; padding: 4px 10px; cursor: pointer; background: #fff; color: #0d2a8a; }
+.h-act-btn:hover { background: #0d2a8a; color: #fff; }
+.h-del-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; border: 2px solid #a02020; border-radius: 3px; padding: 4px 10px; cursor: pointer; background: none; color: #a02020; margin-left: auto; }
+.h-del-btn:hover { background: #fde0e0; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #0d2a8a; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LOTUS EVANGELIST</h1>
+  <span class="sub">LinkedIn Post Generator</span>
+  <span class="ver">v36</span>
+  <span id="day-badge" class="day-badge">--</span>
+</header>
+
+<!-- shown when no proxy URL is configured and we are not on claude.ai -->
+<div id="proxy-banner" class="proxy-banner">
+  <span>No Cloudflare Worker proxy configured. API calls may fail due to CORS.</span>
+  <span>Go to Settings to enter your Worker URL.</span>
+</div>
+
+<div class="key-bar">
+  <label>Anthropic</label>
+  <input type="password" class="key-input" id="anth-key" placeholder="sk-ant-api03-..." autocomplete="off">
+  <button class="key-btn" onclick="saveAnthKey()">Save</button>
+  <span class="key-status" id="anth-status"></span>
+  <div class="key-sep"></div>
+  <label>Buffer</label>
+  <input type="password" class="key-input" id="buf-key" placeholder="Buffer access token..." autocomplete="off">
+  <button class="key-btn green" onclick="saveBufKey()">Save</button>
+  <span class="key-status" id="buf-status"></span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('compose')">✦ COMPOSE</div>
+  <div class="tab" onclick="switchTab('history')">◷ HISTORY</div>
+  <div class="tab" onclick="switchTab('settings')">⚙ SETTINGS</div>
+</div>
+
+<div class="app-body">
+
+  <div id="tab-compose" class="tab-panel active">
+    <aside class="panel-left">
+      <div>
+        <div class="section-label">Category</div>
+        <div class="cat-grid">
+          <button class="cat-btn active" data-cat="domino">HCL Domino</button>
+          <button class="cat-btn" data-cat="modernization">Modernization</button>
+          <button class="cat-btn" data-cat="leadership">Leadership</button>
+          <button class="cat-btn" data-cat="sales">Sales / GTM</button>
+          <button class="cat-btn" data-cat="ai">AI & Tech</button>
+          <button class="cat-btn" data-cat="ai-strategy">AI Strategy</button>
+          <button class="cat-btn" data-cat="advisory">Advisory / Hiring</button>
+          <button class="cat-btn" data-cat="culture">Culture / Career</button>
+          <button class="cat-btn" data-cat="random">Wildcard</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Topic / Seed Idea</label>
+        <textarea id="topic" placeholder="e.g. Why CIOs keep delaying migrations..."></textarea>
+      </div>
+
+      <div>
+        <div class="section-label">Tone</div>
+        <div class="tone-grid">
+          <button class="tone-btn active" data-tone="practitioner">Practitioner</button>
+          <button class="tone-btn" data-tone="thought-leader">Thought Leader</button>
+          <button class="tone-btn" data-tone="story">War Story</button>
+          <button class="tone-btn" data-tone="question">Provocative Q</button>
+          <button class="tone-btn" data-tone="tip">Tip / How-To</button>
+          <button class="tone-btn" data-tone="cfocio">CFO / CIO</button>
+          <button class="tone-btn" data-tone="hiring">Hire Me Signal</button>
+          <button class="tone-btn" data-tone="unpopular">Unpopular Opinion</button>
+          <button class="tone-btn" data-tone="thread">Numbered List</button>
+          <button class="tone-btn" data-tone="behind">Behind Scenes</button>
+          <button class="tone-btn" data-tone="retrospective">Retrospective</button>
+          <button class="tone-btn" data-tone="myth">Myth Busting</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Schedule For</label>
+        <select id="post-day">
+          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+          <option>Thursday</option><option>Friday</option>
+        </select>
+      </div>
+
+      <hr class="divider">
+
+      <div>
+        <div class="section-label">Signature Touches</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="toggle-row">
+            <span class="lbl">Hidden Music Lyric</span>
+            <label class="toggle"><input type="checkbox" id="lyric-toggle" checked><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="lbl">Root Beer / Candy Corn / Pinball</span>
+            <label class="toggle"><input type="checkbox" id="kb-toggle"><span class="slider"></span></label>
+          </div>
+          <p class="hint">Pinball auto-fires Fridays.</p>
+        </div>
+      </div>
+
+      <button class="gen-btn" id="gen-btn" onclick="generatePost()">✦ Generate Post</button>
+
+      <div id="insight-bar" class="insight-bar">
+        <strong>Edit Patterns</strong>
+        <span id="insight-text"></span>
+      </div>
+    </aside>
+
+    <main class="panel-right">
+      <div id="status" class="status-bar"></div>
+
+      <div id="placeholder" class="placeholder">
+        <div class="big">✦</div>
+        <p>Pick a category, enter a topic, choose a tone, click Generate.</p>
+      </div>
+
+      <div id="post-card" class="result-card">
+        <div class="card-top">
+          <span class="card-top-label">LinkedIn Post</span>
+          <div class="card-acts">
+            <button class="sm-btn" onclick="generatePost()">↺ Regen</button>
+            <button class="sm-btn" id="copy-btn" onclick="copyPost()">Copy</button>
+          </div>
+        </div>
+        <textarea id="post-text" spellcheck="true" oninput="onPostEdit()"></textarea>
+        <div class="post-meta">
+          <span id="char-count">0 chars</span>
+          <span id="word-count">0 words</span>
+          <span id="hashtag-count">0 hashtags</span>
+          <span id="read-time">~0 min</span>
+        </div>
+      </div>
+
+      <div id="buffer-row" class="buffer-row">
+        <select class="buf-select" id="buf-profile-select">
+          <option value="">-- Select LinkedIn profile --</option>
+        </select>
+        <button class="buf-btn" onclick="sendToBuffer('queue')">Add to Queue</button>
+        <button class="buf-btn draft" onclick="sendToBuffer('draft')">Draft</button>
+      </div>
+
+      <div id="save-bar" class="save-bar">
+        <p>Edited -- save so future posts learn from changes?</p>
+        <button class="save-btn" onclick="savePost()">Save To History</button>
+      </div>
+
+      <div id="egg-bar" class="egg-bar">
+        <strong>Hidden Lyric</strong>
+        <span id="egg-text"></span>
+      </div>
+
+      <div id="send-row" class="send-row">
+        <input type="email" class="email-input" id="email" value="keith@keithbrooks.com">
+        <button class="send-btn" onclick="sendToGmail()">Email Draft</button>
+      </div>
+    </main>
+  </div>
+
+  <div id="tab-history" class="tab-panel">
+    <div class="hist-head">
+      <h2>Post History</h2>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <span class="hist-stats" id="hist-stats"></span>
+        <button class="h-act-btn" onclick="exportHistory()">Export</button>
+        <label class="h-act-btn" style="cursor:pointer">Import<input type="file" accept=".json" style="display:none" onchange="importHistory(event)"></label>
+        <button class="danger-btn" onclick="clearHistory()">Clear All</button>
+      </div>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+
+  <div id="tab-settings" class="tab-panel">
+
+    <div class="set-section">
+      <div class="set-head">Cloudflare Worker Proxy</div>
+      <div class="set-body">
+        <p class="set-hint">
+          When running on GitHub Pages, all API calls go through your Cloudflare Worker to avoid CORS errors.
+          Deploy <code>worker.js</code> to Cloudflare and paste the URL below (e.g. <code>https://lotus-proxy.yourname.workers.dev</code>).
+          Leave blank to call APIs directly (works in Claude.ai artifacts only).
+        </p>
+        <div class="set-row">
+          <label>Worker URL</label>
+          <input type="text" class="set-input proxy-url" id="proxy-url-input" placeholder="https://lotus-proxy.yourname.workers.dev">
+          <button class="set-btn" onclick="saveProxyUrl()">Save</button>
+          <button class="set-btn" style="background:#555" onclick="testProxy()">Test</button>
+        </div>
+        <p class="set-hint" id="proxy-hint"></p>
+        <div class="set-body" style="padding:0;gap:6px">
+          <p class="set-hint"><strong>Worker routes expected:</strong></p>
+          <p class="set-hint">POST {worker}/anthropic -- Anthropic API proxy</p>
+          <p class="set-hint">POST {worker}/buffer -- Buffer write (create/queue updates)</p>
+          <p class="set-hint">GET  {worker}/buffer-get -- Buffer read (profiles list)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <div class="set-head">Buffer Integration</div>
+      <div class="set-body">
+        <p class="set-hint">Get your access token at <a href="https://buffer.com" target="_blank">buffer.com</a> -- Settings -- Apps &amp; API. Paste it here and click Load Profiles.</p>
+        <div class="set-row">
+          <label>Access Token</label>
+          <input type="password" class="set-input" id="buf-token-settings" placeholder="Paste Buffer access token..." autocomplete="off">
+          <button class="set-btn green" onclick="loadBufferProfiles()">Load Profiles</button>
+        </div>
+        <div id="profile-list" class="profile-list"></div>
+        <p class="set-hint" id="buf-profile-hint"></p>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <div class="set-head">Anthropic API Key</div>
+      <div class="set-body">
+        <p class="set-hint">Get your key at console.anthropic.com. Stored in your browser only.</p>
+        <div class="set-row">
+          <label>API Key</label>
+          <input type="password" class="set-input" id="anth-token-settings" placeholder="sk-ant-api03-..." autocomplete="off">
+          <button class="set-btn" onclick="saveAnthFromSettings()">Save</button>
+          <span class="key-status" id="anth-settings-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <div class="set-head">Data</div>
+      <div class="set-body">
+        <div class="set-row">
+          <button class="set-btn" onclick="exportHistory()">Export All Posts</button>
+          <label class="set-btn" style="cursor:pointer">Import Posts<input type="file" accept=".json" style="display:none" onchange="importHistory(event)"></label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let selTone = 'practitioner', selCat = 'domino';
+let curPost = '', genPost = '', curMeta = {}, edited = false;
+let bufProfileId = '', bufProfileName = '';
+
+// ── Detect environment ────────────────────────────────────────────────────────
+// In Claude.ai artifact sandbox we can call Anthropic directly (anthropic-dangerous-allow-browser).
+// On GitHub Pages we MUST go through the Worker.
+function isClaudeArtifact() {
+  try {
+    return !!window.storage || window.location.hostname === 'claude.ai' ||
+      window.location.hostname.endsWith('.claude.ai') ||
+      window.location.protocol === 'blob:' ||
+      window.location.hostname === 'null' ||
+      window.location.hostname === '';
+  } catch (e) { return false; }
+}
+
+// ── Storage helpers ───────────────────────────────────────────────────────────
+async function sg(k) {
+  if (window.storage) { try { const r = await window.storage.get(k); return r ? r.value : null; } catch(e){} }
+  try { return localStorage.getItem(k); } catch(e) { return null; }
+}
+async function ss(k, v) {
+  if (window.storage) { try { await window.storage.set(k, v); return; } catch(e){} }
+  try { localStorage.setItem(k, v); } catch(e) {}
+}
+async function sd(k) {
+  if (window.storage) { try { await window.storage.delete(k); return; } catch(e){} }
+  try { localStorage.removeItem(k); } catch(e) {}
+}
+async function getHist() { try { return JSON.parse(await sg('le-hist') || '[]'); } catch(e) { return []; } }
+async function setHist(a) { await ss('le-hist', JSON.stringify(a)); }
+async function getPats() { try { return JSON.parse(await sg('le-pats') || '[]'); } catch(e) { return []; } }
+async function setPats(a) { await ss('le-pats', JSON.stringify(a)); }
+
+function lGet(k) { try { return localStorage.getItem(k) || ''; } catch(e) { return ''; } }
+function lSet(k, v) { try { localStorage.setItem(k, v); } catch(e) {} }
+
+// ── Key helpers ───────────────────────────────────────────────────────────────
+function saveAnthKey() { const k = document.getElementById('anth-key').value.trim(); if (!k) return; lSet('le-anth', k); setAnthSt(true); document.getElementById('anth-token-settings').value = k; }
+function saveAnthFromSettings() { const k = document.getElementById('anth-token-settings').value.trim(); if (!k) return; lSet('le-anth', k); setAnthSt(true); document.getElementById('anth-key').value = k; const el = document.getElementById('anth-settings-status'); el.textContent = '✓ Saved'; el.className = 'key-status ok'; }
+function getAnth() { return lGet('le-anth'); }
+function setAnthSt(ok) { const el = document.getElementById('anth-status'); el.textContent = ok ? '✓' : '✗ No key'; el.className = 'key-status ' + (ok ? 'ok' : 'no'); }
+
+function saveBufKey() { const k = document.getElementById('buf-key').value.trim(); if (!k) return; lSet('le-buf', k); setBufSt(true); document.getElementById('buf-token-settings').value = k; }
+function getBuf() { return lGet('le-buf'); }
+function setBufSt(ok) { const el = document.getElementById('buf-status'); el.textContent = ok ? '✓ Connected' : '✗ No token'; el.className = 'key-status ' + (ok ? 'ok' : 'no'); }
+
+// ── Proxy URL helpers ─────────────────────────────────────────────────────────
+function getProxyUrl() { return lGet('le-proxy-url').replace(/\/$/, ''); }
+function saveProxyUrl() {
+  const v = document.getElementById('proxy-url-input').value.trim().replace(/\/$/, '');
+  lSet('le-proxy-url', v);
+  document.getElementById('proxy-hint').textContent = v ? '✓ Proxy URL saved: ' + v : 'Cleared. Will call APIs directly (Claude.ai only).';
+  checkProxyBanner();
+}
+function checkProxyBanner() {
+  const banner = document.getElementById('proxy-banner');
+  const proxy = getProxyUrl();
+  if (isClaudeArtifact() || proxy) {
+    banner.classList.remove('visible');
+  } else {
+    banner.classList.add('visible');
+  }
+}
+async function testProxy() {
+  const proxy = getProxyUrl();
+  if (!proxy) { document.getElementById('proxy-hint').textContent = 'Enter a Worker URL first.'; return; }
+  document.getElementById('proxy-hint').textContent = 'Testing...';
+  try {
+    const resp = await fetch(proxy + '/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': getAnth() || 'test', 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'Hi' }] })
+    });
+    const d = await resp.json();
+    if (d.error && d.error.type === 'authentication_error') {
+      document.getElementById('proxy-hint').textContent = '✓ Worker reachable (auth error expected -- add real API key).';
+    } else if (d.content || d.id) {
+      document.getElementById('proxy-hint').textContent = '✓ Worker reachable and responding correctly.';
+    } else {
+      document.getElementById('proxy-hint').textContent = 'Worker responded: ' + JSON.stringify(d).slice(0, 120);
+    }
+  } catch (err) {
+    document.getElementById('proxy-hint').textContent = 'Connection failed: ' + err.message;
+  }
+}
+
+// ── Routing: choose direct vs proxy ──────────────────────────────────────────
+function anthropicUrl() {
+  const proxy = getProxyUrl();
+  if (proxy) return proxy + '/anthropic';
+  return 'https://api.anthropic.com/v1/messages';
+}
+function anthropicHeaders() {
+  const headers = { 'Content-Type': 'application/json', 'x-api-key': getAnth(), 'anthropic-version': '2023-06-01' };
+  if (!getProxyUrl()) headers['anthropic-dangerous-allow-browser'] = 'true';
+  return headers;
+}
+
+// Buffer calls: always go through proxy when available (Buffer doesn't allow browser direct calls).
+// If no proxy, use Anthropic API with Buffer MCP (the v34 approach).
+function hasProxy() { return !!getProxyUrl(); }
+
+// ── Buffer via direct REST (when proxy is available) ─────────────────────────
+async function bufferGetProfiles() {
+  const proxy = getProxyUrl();
+  const token = getBuf();
+  if (!token) throw new Error('No Buffer token.');
+  if (!proxy) throw new Error('Buffer direct API requires the Cloudflare Worker proxy. Add your Worker URL in Settings.');
+
+  const resp = await fetch(proxy + '/buffer-get', {
+    method: 'GET',
+    headers: { 'x-buf-token': token, 'x-buf-path': 'profiles.json' }
+  });
+  const data = await resp.json();
+  if (!Array.isArray(data)) throw new Error('Unexpected Buffer response: ' + JSON.stringify(data).slice(0, 120));
+  return data;
+}
+
+async function bufferPost(path, body) {
+  const proxy = getProxyUrl();
+  const token = getBuf();
+  if (!token) throw new Error('No Buffer token.');
+  if (!proxy) throw new Error('Buffer write requires the Cloudflare Worker proxy.');
+
+  const resp = await fetch(proxy + '/buffer', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-buf-token': token,
+      'x-buf-path': path
+    },
+    body: JSON.stringify(body)
+  });
+  return resp.json();
+}
+
+// ── Buffer via Anthropic MCP (fallback when no proxy, runs in Claude.ai) ─────
+async function bufferViaMcp(instruction) {
+  const resp = await fetch(anthropicUrl(), {
+    method: 'POST',
+    headers: anthropicHeaders(),
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 500,
+      mcp_servers: [{ type: 'url', url: 'https://mcp.buffer.com/mcp', name: 'buffer-mcp' }],
+      messages: [{ role: 'user', content: instruction }]
+    })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message);
+  return data;
+}
+
+// ── Load Buffer profiles (routing logic) ─────────────────────────────────────
+async function loadBufferProfiles() {
+  const token = document.getElementById('buf-token-settings').value.trim() || getBuf();
+  if (!token) { alert('Enter your Buffer access token first.'); return; }
+  lSet('le-buf', token);
+  document.getElementById('buf-key').value = token;
+  setBufSt(true);
+  const hint = document.getElementById('buf-profile-hint');
+  hint.textContent = 'Loading profiles...';
+
+  try {
+    // Buffer no longer accepts direct REST API calls with access tokens.
+    // Always use Anthropic MCP which handles Buffer auth internally.
+    if (!getAnth()) throw new Error('Anthropic API key required to load Buffer profiles via MCP.');
+    const data = await bufferViaMcp('List all my Buffer social profiles. Return ONLY a JSON array: [{"id":"...","name":"...","service":"..."}]. No markdown, no explanation.');
+    const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    const profiles = parsed.filter(p => (p.service || '').toLowerCase().includes('linkedin'));
+
+    if (!profiles.length) { hint.textContent = 'No LinkedIn profiles found in Buffer.'; return; }
+    renderProfiles(profiles);
+    hint.textContent = profiles.length + ' LinkedIn profile(s) found. Click Select to choose one.';
+  } catch (err) {
+    hint.textContent = 'Error: ' + err.message;
+  }
+}
+
+function renderProfiles(profiles) {
+  const list = document.getElementById('profile-list');
+  const sel = document.getElementById('buf-profile-select');
+  sel.innerHTML = '<option value="">-- Select LinkedIn profile --</option>';
+  list.innerHTML = profiles.map(p =>
+    `<div class="profile-item" id="pi-${p.id}"><span>${p.name || p.id}</span><span class="profile-type">${p.service || 'linkedin'}</span><button class="profile-sel-btn ${bufProfileId === p.id ? 'selected' : ''}" onclick="selectProfile('${p.id}','${(p.name || p.id).replace(/'/g, "\\'")}')"> ${bufProfileId === p.id ? '✓ Selected' : 'Select'}</button></div>`
+  ).join('');
+  profiles.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name || p.id; sel.appendChild(o); });
+  const saved = lGet('le-buf-pid');
+  if (saved) { const m = profiles.find(p => p.id === saved); if (m) selectProfile(m.id, m.name || m.id); }
+}
+
+function selectProfile(id, name) {
+  bufProfileId = id; bufProfileName = name; lSet('le-buf-pid', id); lSet('le-buf-pname', name);
+  document.querySelectorAll('.profile-sel-btn').forEach(b => { b.textContent = 'Select'; b.classList.remove('selected'); });
+  const btn = document.querySelector(`#pi-${id} .profile-sel-btn`);
+  if (btn) { btn.textContent = '✓ Selected'; btn.classList.add('selected'); }
+  document.getElementById('buf-profile-select').value = id;
+  document.getElementById('buf-profile-hint').textContent = '✓ Posting to: ' + name;
+}
+
+// ── Send to Buffer ────────────────────────────────────────────────────────────
+async function sendToBuffer(mode) {
+  const token = getBuf();
+  const pid = document.getElementById('buf-profile-select').value || bufProfileId;
+  const post = document.getElementById('post-text').value.trim();
+  if (!token) { showStatus('error', 'Add your Buffer token first.'); return; }
+  if (!pid) { showStatus('error', 'Select a LinkedIn profile in Settings first.'); return; }
+  if (!post) { showStatus('error', 'No post content to send.'); return; }
+
+  document.querySelectorAll('.buf-btn').forEach(b => b.disabled = true);
+  showStatus('info', mode === 'draft' ? 'Saving to Buffer as draft...' : 'Adding to Buffer queue...');
+
+  try {
+    // Buffer no longer accepts direct REST API calls. Always use MCP.
+    const instr = mode === 'draft'
+      ? `Save this as a DRAFT in Buffer for LinkedIn profile ID "${pid}". Do NOT queue or publish. Post:\n\n${post}`
+      : `Add this to the Buffer queue for LinkedIn profile ID "${pid}". Post:\n\n${post}`;
+    await bufferViaMcp(instr);
+
+    const hist = await getHist();
+    if (hist.length && hist[0].final === post) { hist[0].buffered = true; hist[0].bufMode = mode; await setHist(hist); }
+    showStatus('success', mode === 'draft' ? '✓ Saved to Buffer as draft. Review at buffer.com' : '✓ Added to Buffer queue.');
+  } catch (err) {
+    showStatus('error', 'Buffer error: ' + err.message);
+  } finally {
+    document.querySelectorAll('.buf-btn').forEach(b => b.disabled = false);
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const ak = getAnth(); if (ak) { document.getElementById('anth-key').value = ak; document.getElementById('anth-token-settings').value = ak; setAnthSt(true); } else setAnthSt(false);
+  const bk = getBuf(); if (bk) { document.getElementById('buf-key').value = bk; document.getElementById('buf-token-settings').value = bk; setBufSt(true); } else setBufSt(false);
+  const bpid = lGet('le-buf-pid'), bpname = lGet('le-buf-pname');
+  if (bpid) { bufProfileId = bpid; bufProfileName = bpname; const s = document.getElementById('buf-profile-select'); const o = document.createElement('option'); o.value = bpid; o.textContent = bpname; o.selected = true; s.appendChild(o); }
+  const pu = getProxyUrl();
+  if (pu) document.getElementById('proxy-url-input').value = pu;
+  checkProxyBanner();
+  refreshInsight();
+});
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const ti = new Date().getDay();
+document.getElementById('day-badge').textContent = DAYS[ti].toUpperCase();
+let nd = (ti + 1) % 7; if (nd === 0) nd = 1; if (nd === 6) nd = 1;
+const ds = document.getElementById('post-day'); for (let o of ds.options) if (o.value === DAYS[nd]) { o.selected = true; break; }
+if (ti === 5) document.getElementById('kb-toggle').checked = true;
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(n) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['compose','history','settings'][i] === n));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + n).classList.add('active');
+  if (n === 'history') renderHistory();
+}
+
+document.querySelectorAll('.tone-btn').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.tone-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); selTone = b.dataset.tone; }));
+document.querySelectorAll('.cat-btn').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); selCat = b.dataset.cat; }));
+
+// ── Post editing ──────────────────────────────────────────────────────────────
+function onPostEdit() { curPost = document.getElementById('post-text').value; updateMeta(); if (curPost !== genPost && genPost) { edited = true; document.getElementById('save-bar').classList.add('visible'); } }
+function updateMeta() {
+  const len = curPost.length, w = curPost.trim() ? curPost.trim().split(/\s+/).length : 0, t = (curPost.match(/#\w+/g) || []).length, m = Math.max(1, Math.round(w / 200));
+  const cc = document.getElementById('char-count'); cc.textContent = len + ' chars'; cc.className = len > 2800 ? 'warn' : len >= 1100 ? 'ok' : '';
+  document.getElementById('word-count').textContent = w + ' words';
+  document.getElementById('hashtag-count').textContent = t + ' hashtag' + (t !== 1 ? 's' : '');
+  document.getElementById('read-time').textContent = '~' + m + ' min';
+}
+
+function copyPost() {
+  const ta = document.getElementById('post-text'); ta.select(); ta.setSelectionRange(0, 99999);
+  try { document.execCommand('copy'); } catch(e) {}
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).catch(() => {});
+  const btn = document.getElementById('copy-btn'); btn.textContent = '✓ Copied'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  window.getSelection && window.getSelection().removeAllRanges();
+}
+
+// ── Save post ─────────────────────────────────────────────────────────────────
+async function savePost() {
+  const hist = await getHist();
+  const e = { id: Date.now(), savedAt: new Date().toISOString(), day: document.getElementById('post-day').value, cat: selCat, tone: selTone, topic: document.getElementById('topic').value.trim(), generated: genPost, final: curPost, wasEdited: genPost !== curPost, lyric: curMeta.hidden_lyric || '', tip: curMeta.posting_tip || '' };
+  hist.unshift(e); if (hist.length > 90) hist.splice(90); await setHist(hist);
+  if (e.wasEdited) { const p = await getPats(); p.unshift({ id: e.id, cat: e.cat, tone: e.tone, note: diffNote(e.generated, e.final) }); if (p.length > 20) p.splice(20); await setPats(p); }
+  document.getElementById('save-bar').classList.remove('visible'); edited = false;
+  showStatus('success', '✓ Saved.'); await refreshInsight(); exportHistory();
+}
+
+function diffNote(o, f) {
+  const d = f.length - o.length, n = [];
+  if (d < -80) n.push('trims (~' + Math.abs(d) + ')');
+  if (d > 80) n.push('expands (+' + d + ')');
+  const oh = (o.match(/#\w+/g) || []).length, fh = (f.match(/#\w+/g) || []).length;
+  if (fh > oh) n.push('adds hashtags'); if (fh < oh) n.push('removes hashtags');
+  const ol = o.split('\n').length, fl = f.split('\n').length;
+  if (fl > ol + 1) n.push('adds line breaks'); if (fl < ol - 1) n.push('tightens');
+  return n.length ? n.join('; ') : 'light edits';
+}
+
+async function refreshInsight() {
+  const p = await getPats(); if (p.length < 2) return;
+  const notes = p.map(x => x.note).join(' | '); const ins = [];
+  if ((notes.match(/trims/g) || []).length >= 2) ins.push('consistently trims shorter');
+  if ((notes.match(/expands/g) || []).length >= 2) ins.push('tends to expand');
+  if ((notes.match(/hashtag/g) || []).length >= 2) ins.push('adjusts hashtags');
+  if ((notes.match(/line break/g) || []).length >= 2) ins.push('prefers line breaks');
+  if (!ins.length && p.length >= 3) ins.push('light consistent edits -- voice is landing');
+  if (ins.length) { document.getElementById('insight-text').textContent = '(' + p.length + ' posts) ' + ins.join(', ') + '.'; document.getElementById('insight-bar').classList.add('visible'); }
+}
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+async function exportHistory() {
+  const payload = { exported: new Date().toISOString(), posts: await getHist(), editPatterns: await getPats() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = 'lotus-evangelist-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); URL.revokeObjectURL(url);
+}
+
+async function importHistory(evt) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      const posts = payload.posts || (Array.isArray(payload) ? payload : []);
+      if (!posts.length) { alert('No posts found.'); return; }
+      const ex = await getHist(), ids = new Set(ex.map(x => x.id));
+      const merged = [...ex, ...posts.filter(x => !ids.has(x.id))]; merged.sort((a, b) => b.id - a.id);
+      await setHist(merged);
+      if (payload.editPatterns) { const ep = await getPats(), epIds = new Set(ep.map(x => x.id)); await setPats([...ep, ...payload.editPatterns.filter(x => !epIds.has(x.id))]); }
+      renderHistory(); alert('Imported ' + posts.length + ' posts.');
+    } catch (e) { alert('Invalid file.'); }
+  };
+  reader.readAsText(file); evt.target.value = '';
+}
+
+// ── Tone / category descriptions ──────────────────────────────────────────────
+const TONE = {
+  practitioner: 'Seasoned practitioner sharing a real-world observation from the trenches. Specific, opinionated, no hedging.',
+  'thought-leader': 'Broad perspective on where the industry is heading. Bold, authoritative, forward-looking.',
+  story: 'Open with a vivid client scenario or personal moment. Pivot to the hard-won lesson.',
+  question: 'Lead with a provocative question challenging executive assumptions. Answer with conviction.',
+  tip: 'One concrete actionable technique. Practical and specific.',
+  cfocio: 'Frame from the financial/strategic lens of a CFO or CIO. Risk, cost, compliance, competitive positioning.',
+  hiring: 'Naturally and credibly position Keith as the person to call. Weave credentials in organically.',
+  unpopular: 'Contrarian but defensible. Blunt hook. Acknowledge pushback, hold the line.',
+  thread: 'Numbered list, 5-8 punchy insights. Intro hooks, outro lands.',
+  behind: 'Pull back the curtain on how Keith actually works. Builds trust and curiosity.',
+  retrospective: 'Lesson learned. First-person, honest, clear takeaway.',
+  myth: 'Name a myth. Bust it with evidence. End with the truth.'
+};
+const CAT = {
+  domino: 'HCL Domino, Notes, LotusScript, DRAPI, migration strategy, version upgrades.',
+  modernization: 'Legacy modernization -- technical debt, migration ROI, CFO/CIO decision-making.',
+  leadership: 'Enterprise leadership -- teams, organizational change, boards.',
+  sales: 'B2B sales, go-to-market, complex enterprise deals.',
+  ai: 'AI in the enterprise -- practical use, hype vs reality, what actually works.',
+  'ai-strategy': 'Keith as AI strategist -- helping CFOs/CIOs build roadmaps, evaluate vendors, deploy AI that delivers ROI.',
+  advisory: 'Keith as independent advisor. Signals availability.',
+  culture: 'Tech culture, careers, remote work, conference life.',
+  random: 'Any authentic topic from a senior technology advisor. Make it interesting.'
+};
+
+// ── System prompt ─────────────────────────────────────────────────────────────
+async function buildSys() {
+  const p = await getPats();
+  const ec = p.length ? '\n\nEDIT PATTERNS:\n' + p.slice(0, 8).map(x => `- ${x.tone}/${x.cat}: ${x.note}`).join('\n') : '';
+  return `Ghostwrite LinkedIn posts for Keith Brooks -- HCL Ambassador 2020-2026, enterprise modernization and AI strategy advisor, B2B Whisperer / The Rockteam. Clients are CFOs and CIOs.\n\nVOICE: Direct, unfiltered, slightly blunt. No corporate speak. Short punchy sentences mixed with longer ones. Honest about uncertainty. Parenthetical asides. Talks to peers. Dry wit. Ends with a reflective question or bold statement. Hashtags at END only (4-6). No emojis. No bullet lists except numbered list tone. Length: 1400-2000 chars, never below 1100. No em dashes anywhere -- use commas or parentheses instead.\n\nGOAL: Every post grows Keith's following AND signals to CFOs/CIOs he is the person to call.\n\nQUIRKS (apply when instructed):\n1. HIDDEN LYRIC: Embed an EXACT verbatim lyric word-for-word naturally. Do not alter a single word. Must grammatically fit.\n2. KB REFERENCE: Organic mention of root beer, candy corn, or pinball.\n${ec}\n\nOUTPUT: ONLY valid JSON, no markdown:\n{"post":"...","hidden_lyric":"exact words -- Song, Artist","kb_ref":"phrase or empty","posting_tip":"one short tip"}`;
+}
+
+function buildUser() {
+  return `LinkedIn post for ${document.getElementById('post-day').value}.\nCategory: ${CAT[selCat]}\nTopic: ${document.getElementById('topic').value.trim() || 'Choose an appropriate topic for my audience and voice.'}\nTone: ${TONE[selTone]}\nHidden lyric: ${document.getElementById('lyric-toggle').checked ? 'YES' : 'NO'}\nKB reference: ${document.getElementById('kb-toggle').checked ? 'YES' : 'NO'}\nOutput ONLY the JSON.`;
+}
+
+// ── Generate post ─────────────────────────────────────────────────────────────
+async function generatePost() {
+  const ak = getAnth(); if (!ak) { showStatus('error', 'Add your Anthropic API key first.'); return; }
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="loading-pulse"><span></span><span></span><span></span></span> Writing...';
+  showStatus('info', 'Drafting your post...');
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('egg-bar').classList.remove('visible');
+  document.getElementById('save-bar').classList.remove('visible');
+  document.getElementById('buffer-row').classList.remove('visible');
+  edited = false; await refreshInsight();
+
+  try {
+    const resp = await fetch(anthropicUrl(), {
+      method: 'POST',
+      headers: anthropicHeaders(),
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, system: await buildSys(), messages: [{ role: 'user', content: buildUser() }] })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content.map(b => b.text || '').join('');
+    let parsed; try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch(e) { throw new Error('Could not parse response.'); }
+    curPost = parsed.post || ''; genPost = curPost; curMeta = parsed;
+    document.getElementById('post-text').value = curPost; updateMeta();
+    document.getElementById('post-card').classList.add('visible');
+    document.getElementById('send-row').classList.add('visible');
+    if (getBuf()) document.getElementById('buffer-row').classList.add('visible');
+    if (parsed.hidden_lyric) { document.getElementById('egg-text').textContent = '"' + parsed.hidden_lyric + '"'; document.getElementById('egg-bar').classList.add('visible'); }
+    const hist = await getHist();
+    hist.unshift({ id: Date.now(), savedAt: new Date().toISOString(), day: document.getElementById('post-day').value, cat: selCat, tone: selTone, topic: document.getElementById('topic').value.trim(), generated: curPost, final: curPost, wasEdited: false, lyric: parsed.hidden_lyric || '', tip: parsed.posting_tip || '' });
+    if (hist.length > 90) hist.splice(90); await setHist(hist);
+    showStatus('success', '✓ Post ready.' + (parsed.posting_tip ? ' · ' + parsed.posting_tip : ''));
+  } catch (err) {
+    showStatus('error', 'Error: ' + err.message);
+    document.getElementById('placeholder').style.display = 'flex';
+  } finally {
+    btn.disabled = false; btn.innerHTML = '✦ Generate Post';
+  }
+}
+
+// ── History render ────────────────────────────────────────────────────────────
+async function renderHistory() {
+  const hist = await getHist();
+  document.getElementById('hist-stats').textContent = hist.length + ' posts saved';
+  const c = document.getElementById('hist-list');
+  if (!hist.length) { c.innerHTML = '<div class="hist-empty">No posts yet.</div>'; return; }
+  c.innerHTML = hist.map(e => {
+    const date = new Date(e.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const buf = e.buffered ? `<span class="h-tag buffered">${e.bufMode === 'draft' ? 'Draft' : 'Queued'}</span>` : '';
+    return `<div class="h-card"><div class="h-card-head"><span class="h-date">${date} · ${e.day || ''}</span><span class="h-tag cat">${e.cat || ''}</span><span class="h-tag tone">${e.tone || ''}</span>${e.wasEdited ? '<span class="h-tag edited">Edited</span>' : ''}${buf}</div><div class="h-card-body">${(e.final || e.generated || '').slice(0, 240)}</div><div class="h-card-foot"><button class="h-act-btn" onclick="loadHist(${e.id})">Load</button><button class="h-del-btn" onclick="delEntry(${e.id})">Delete</button></div></div>`;
+  }).join('');
+}
+
+async function loadHist(id) {
+  const hist = await getHist(), e = hist.find(x => x.id === id); if (!e) return;
+  document.getElementById('post-text').value = e.final || e.generated || '';
+  document.getElementById('topic').value = e.topic || '';
+  curPost = document.getElementById('post-text').value; genPost = e.generated || ''; updateMeta();
+  document.getElementById('post-card').classList.add('visible');
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('send-row').classList.add('visible');
+  if (getBuf()) document.getElementById('buffer-row').classList.add('visible');
+  switchTab('compose'); showStatus('info', 'Loaded from history.');
+}
+async function delEntry(id) { await setHist((await getHist()).filter(x => x.id !== id)); renderHistory(); }
+async function clearHistory() {
+  if (!confirm('Delete all posts and edit patterns?')) return;
+  await sd('le-hist'); await sd('le-pats'); renderHistory();
+  document.getElementById('insight-bar').classList.remove('visible');
+}
+
+// ── Gmail ─────────────────────────────────────────────────────────────────────
+function sendToGmail() {
+  const email = document.getElementById('email').value.trim(), post = document.getElementById('post-text').value, day = document.getElementById('post-day').value;
+  if (!email || !post) return;
+  const tip = curMeta.posting_tip ? '\nTip: ' + curMeta.posting_tip : '';
+  const lyric = curMeta.hidden_lyric ? '\nLyric: ' + curMeta.hidden_lyric : '';
+  const kb = curMeta.kb_ref ? '\nRef: ' + curMeta.kb_ref : '';
+  window.location.href = 'mailto:' + email + '?subject=' + encodeURIComponent('LinkedIn draft -- ' + day) + '&body=' + encodeURIComponent(day + tip + lyric + kb + '\n\n' + post + '\n\nLotus Evangelist v36');
+  showStatus('success', '✓ Opening mail app.');
+}
+
+function showStatus(t, m) { const el = document.getElementById('status'); el.className = 'status-bar visible ' + t; el.textContent = m; }
+</script>
+</body>
+</html>
