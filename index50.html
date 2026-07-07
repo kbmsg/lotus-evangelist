@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotus Evangelist v50</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: 'DM Mono', monospace; font-size: 13px; background: #fff; color: #000; }
+
+header { background: #0d2a8a; color: #fff; padding: 8px 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+header h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
+header .sub { font-size: 13px; opacity: 0.85; }
+header .ver { font-size: 11px; opacity: 0.6; }
+.day-badge { margin-left: auto; background: #fff; color: #0d2a8a; font-size: 15px; font-weight: 700; padding: 4px 12px; border-radius: 3px; letter-spacing: 0.06em; }
+
+.key-bar { background: #f0f5ff; border-bottom: 2px solid #0d2a8a; padding: 6px 16px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.key-bar label { font-size: 12px; font-weight: 700; color: #0d2a8a; white-space: nowrap; }
+.key-input { font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 4px 8px; outline: none; width: 200px; }
+.key-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.key-btn:hover { background: #1a40c0; }
+.key-btn.green { background: #168a46; }
+.key-btn.green:hover { background: #0f5c2e; }
+.key-sep { width: 1px; height: 20px; background: #0d2a8a; opacity: 0.3; flex-shrink: 0; }
+.key-status { font-size: 11px; font-weight: 700; white-space: nowrap; }
+.key-status.ok { color: #145c35; }
+.key-status.no { color: #a02020; }
+
+.tabs { display: flex; background: #e8eeff; border-bottom: 2px solid #0d2a8a; flex-shrink: 0; }
+.tab { padding: 7px 18px; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; color: #0d2a8a; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.tab.active { background: #fff; border-bottom-color: #0d2a8a; }
+.tab:hover:not(.active) { background: #d8e6fc; }
+
+.app-body { display: flex; flex-direction: column; height: calc(100vh - 106px); overflow: hidden; }
+.tab-panel { display: none; flex: 1; overflow: hidden; }
+.tab-panel.active { display: flex; }
+
+#tab-compose { flex-direction: row; }
+.panel-left { width: 330px; flex-shrink: 0; border-right: 2px solid #0d2a8a; background: #f0f5ff; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+.panel-right { flex: 1; padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; background: #fff; overflow: hidden; }
+#tab-history, #tab-settings { flex-direction: column; padding: 16px 24px; gap: 14px; overflow-y: auto; background: #fff; }
+
+.section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0d2a8a; border-bottom: 1px solid #0d2a8a; padding-bottom: 2px; margin-bottom: 4px; }
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label { font-size: 12px; font-weight: 700; }
+.field textarea, .field select { font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 5px 8px; outline: none; width: 100%; }
+.field textarea { resize: none; height: 56px; }
+.field textarea:focus, .field select:focus { background: #f0f5ff; }
+
+.cat-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+.cat-btn { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; color: #0d2a8a; background: #fff; border: 2px solid #0d2a8a; border-radius: 20px; padding: 3px 9px; cursor: pointer; }
+.cat-btn:hover { background: #d8e6fc; }
+.cat-btn.active { background: #0d2a8a; color: #fff; }
+
+.tone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.tone-btn { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; color: #0d2a8a; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 5px 6px; cursor: pointer; text-align: center; line-height: 1.2; }
+.tone-btn:hover { background: #d8e6fc; }
+.tone-btn.active { background: #0d2a8a; color: #fff; }
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.toggle-row .lbl { font-size: 12px; font-weight: 700; }
+.toggle { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; inset: 0; background: #aac0e8; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+.slider::before { content: ''; position: absolute; height: 14px; width: 14px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+input:checked + .slider { background: #0d2a8a; }
+input:checked + .slider::before { transform: translateX(18px); }
+.hint { font-size: 10px; color: #555; }
+hr.divider { border: none; border-top: 1px solid #0d2a8a; }
+
+.gen-btn { background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 9px 14px; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; }
+.gen-btn:hover { background: #1a40c0; }
+.gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.status-bar { display: none; padding: 7px 10px; border-radius: 3px; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.status-bar.visible { display: block; }
+.status-bar.success { background: #e0f5ea; color: #0a3d20; border: 2px solid #60b880; }
+.status-bar.error   { background: #fde0e0; color: #6a0a0a; border: 2px solid #e08080; }
+.status-bar.info    { background: #e8eeff; color: #0d2a8a; border: 2px solid #0d2a8a; }
+
+.placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; border: 2px dashed #0d2a8a; border-radius: 3px; }
+.placeholder .big { font-size: 36px; opacity: 0.15; }
+.placeholder p { font-size: 13px; max-width: 260px; line-height: 1.5; color: #333; }
+
+.result-card { border: 2px solid #0d2a8a; border-radius: 3px; overflow: hidden; display: none; flex-direction: column; flex: 1; min-height: 0; }
+.result-card.visible { display: flex; }
+.card-top { background: #e8eeff; border-bottom: 2px solid #0d2a8a; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.card-top-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0d2a8a; }
+.card-acts { display: flex; gap: 5px; }
+.sm-btn { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; color: #0d2a8a; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 3px 10px; cursor: pointer; }
+.sm-btn:hover { background: #0d2a8a; color: #fff; }
+.sm-btn.copied { background: #145c35; color: #fff; border-color: #145c35; }
+
+#post-text { font-family: 'DM Mono', monospace; font-size: 13px; line-height: 1.7; color: #000; background: #fff; border: none; width: 100%; padding: 12px; outline: none; resize: none; flex: 1; overflow-y: auto; }
+
+.post-meta { background: #e8eeff; border-top: 2px solid #0d2a8a; padding: 5px 12px; display: flex; gap: 12px; flex-shrink: 0; }
+.post-meta span { font-size: 11px; font-weight: 700; color: #0d2a8a; }
+.post-meta span.warn { color: #a02020; }
+.post-meta span.ok { color: #145c35; }
+
+.buffer-row { display: none; gap: 6px; align-items: center; flex-shrink: 0; padding: 6px 0; }
+.buffer-row.visible { display: flex; }
+.buf-select { font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #168a46; border-radius: 3px; padding: 5px 8px; outline: none; flex: 1; }
+.buf-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #168a46; color: #fff; border: none; border-radius: 3px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+.buf-btn:hover { background: #0f5c2e; }
+.buf-btn.draft { background: #fff; color: #168a46; border: 2px solid #168a46; }
+.buf-btn.draft:hover { background: #e0f5ea; }
+.buf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.save-bar { display: none; align-items: center; justify-content: space-between; gap: 8px; background: #fffbe8; border: 2px solid #a87520; border-radius: 3px; padding: 7px 12px; flex-shrink: 0; }
+.save-bar.visible { display: flex; }
+.save-bar p { font-size: 12px; font-weight: 700; }
+.save-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #a87520; color: #fff; border: none; border-radius: 3px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+
+.egg-bar { display: none; background: #e8eeff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 7px 12px; flex-shrink: 0; }
+.egg-bar.visible { display: block; }
+.egg-bar strong { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #0d2a8a; margin-bottom: 2px; }
+
+.send-row { display: none; gap: 8px; align-items: center; flex-shrink: 0; }
+.send-row.visible { display: flex; }
+
+/* Quote card modal */
+.qc-overlay { display: none; position: fixed; inset: 0; background: rgba(13,42,138,0.55); align-items: center; justify-content: center; z-index: 100; }
+.qc-overlay.visible { display: flex; }
+.qc-modal { background: #fff; border: 2px solid #0d2a8a; border-radius: 4px; padding: 16px; display: flex; flex-direction: column; gap: 10px; max-height: 92vh; }
+.qc-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.qc-modal-head h3 { font-size: 13px; font-weight: 700; color: #0d2a8a; text-transform: uppercase; letter-spacing: 0.06em; }
+.qc-close { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 700; color: #0d2a8a; background: none; border: none; cursor: pointer; line-height: 1; padding: 0 4px; }
+.qc-canvas-wrap { display: flex; align-items: center; justify-content: center; overflow: auto; max-height: 60vh; background: #f0f5ff; border: 1px solid #0d2a8a; border-radius: 3px; padding: 8px; }
+#qc-canvas { display: block; max-width: 100%; height: auto; border-radius: 2px; }
+
+.qc-format-tabs { display: flex; gap: 4px; border-bottom: 2px solid #0d2a8a; padding-bottom: 8px; }
+.qc-format-tab { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700; color: #0d2a8a; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 5px 12px; cursor: pointer; }
+.qc-format-tab.active { background: #0d2a8a; color: #fff; }
+.qc-carousel-nav { display: none; align-items: center; justify-content: center; gap: 10px; }
+.qc-carousel-nav.visible { display: flex; }
+.qc-carousel-nav button { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 5px 12px; cursor: pointer; }
+.qc-carousel-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+.qc-slide-count { font-size: 12px; font-weight: 700; color: #0d2a8a; }
+.qc-stat-inputs { display: none; gap: 8px; flex-wrap: wrap; }
+.qc-stat-inputs.visible { display: flex; }
+.qc-stat-input { font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 6px 8px; outline: none; }
+.qc-controls { display: flex; flex-direction: column; gap: 8px; }
+.qc-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.qc-row label { font-size: 11px; font-weight: 700; color: #0d2a8a; }
+.qc-swatches { display: flex; gap: 5px; }
+.qc-swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; outline: 2px solid transparent; cursor: pointer; }
+.qc-swatch.active { outline-color: #0d2a8a; }
+.qc-text-edit { font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 6px 8px; outline: none; width: 100%; resize: none; height: 50px; }
+.qc-acts { display: flex; gap: 8px; }
+.email-input { flex: 1; font-family: 'DM Mono', monospace; font-size: 12px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 6px 8px; outline: none; }
+.send-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #a87520; color: #fff; border: none; border-radius: 3px; padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+
+.insight-bar { display: none; background: #f0f5ff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 6px 10px; flex-shrink: 0; }
+.insight-bar.visible { display: block; }
+.insight-bar strong { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #0d2a8a; display: block; margin-bottom: 2px; }
+.insight-bar span { font-size: 11px; }
+
+.loading-pulse { display: inline-flex; gap: 4px; align-items: center; }
+.loading-pulse span { width: 6px; height: 6px; background: currentColor; border-radius: 50%; animation: pulse 1s ease-in-out infinite; }
+.loading-pulse span:nth-child(2) { animation-delay: 0.2s; }
+.loading-pulse span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
+
+/* proxy warning banner */
+.proxy-banner { display: none; background: #fffbe8; border-bottom: 2px solid #a87520; padding: 5px 16px; font-size: 11px; font-weight: 700; color: #7a4800; flex-shrink: 0; }
+.proxy-banner.visible { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.proxy-banner a { color: #7a4800; }
+
+.set-section { border: 2px solid #0d2a8a; border-radius: 3px; overflow: hidden; }
+.set-head { background: #e8eeff; border-bottom: 2px solid #0d2a8a; padding: 9px 14px; font-size: 13px; font-weight: 700; color: #0d2a8a; }
+.set-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.set-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.set-row label { font-size: 13px; font-weight: 700; min-width: 110px; }
+.set-input { flex: 1; min-width: 180px; font-family: 'DM Mono', monospace; font-size: 13px; color: #000; background: #fff; border: 2px solid #0d2a8a; border-radius: 3px; padding: 6px 10px; outline: none; }
+.set-btn { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700; background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+.set-btn:hover { background: #1a40c0; }
+.set-btn.green { background: #168a46; }
+.set-btn.green:hover { background: #0f5c2e; }
+.set-hint { font-size: 11px; color: #444; }
+.set-hint a { color: #0d2a8a; }
+.profile-list { display: flex; flex-direction: column; gap: 5px; }
+.profile-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 2px solid #0d2a8a; border-radius: 3px; background: #f0f5ff; }
+.profile-item span { flex: 1; font-size: 13px; font-weight: 700; }
+.profile-type { font-size: 11px; color: #0d2a8a; background: #d8e6fc; border-radius: 10px; padding: 2px 8px; }
+.profile-sel-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; background: #0d2a8a; color: #fff; border: none; border-radius: 3px; padding: 4px 10px; cursor: pointer; }
+.profile-sel-btn.selected { background: #168a46; }
+
+/* proxy URL field highlight */
+.set-input.proxy-url { border-color: #a87520; background: #fffbe8; }
+
+.hist-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+.hist-head h2 { font-size: 15px; font-weight: 700; color: #0d2a8a; }
+.hist-stats { font-size: 12px; color: #333; }
+.danger-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; color: #a02020; background: none; border: 2px solid #a02020; border-radius: 3px; padding: 4px 12px; cursor: pointer; }
+.hist-empty { padding: 40px; text-align: center; font-size: 13px; color: #333; border: 2px dashed #0d2a8a; border-radius: 3px; }
+.hist-list { display: flex; flex-direction: column; gap: 8px; }
+.h-card { border: 2px solid #0d2a8a; border-radius: 3px; overflow: hidden; }
+.h-card-head { background: #e8eeff; border-bottom: 2px solid #0d2a8a; padding: 7px 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.h-date { font-size: 12px; font-weight: 700; }
+.h-tag { font-size: 11px; font-weight: 700; border-radius: 20px; padding: 2px 9px; }
+.h-tag.cat { background: #fff; border: 2px solid #0d2a8a; color: #0d2a8a; }
+.h-tag.tone { background: #0d2a8a; color: #fff; }
+.h-tag.edited { background: #e0f5ea; border: 2px solid #60b880; color: #0a3d20; }
+.h-tag.buffered { background: #e0f5ea; border: 2px solid #168a46; color: #0f5c2e; }
+.h-card-body { padding: 10px 12px; font-size: 12px; line-height: 1.5; white-space: pre-wrap; max-height: 80px; overflow: hidden; position: relative; }
+.h-card-body::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 24px; background: linear-gradient(transparent,#fff); }
+.h-card-foot { padding: 7px 12px; border-top: 2px solid #0d2a8a; display: flex; gap: 6px; background: #e8eeff; }
+.h-act-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; border: 2px solid #0d2a8a; border-radius: 3px; padding: 4px 10px; cursor: pointer; background: #fff; color: #0d2a8a; }
+.h-act-btn:hover { background: #0d2a8a; color: #fff; }
+.h-del-btn { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; border: 2px solid #a02020; border-radius: 3px; padding: 4px 10px; cursor: pointer; background: none; color: #a02020; margin-left: auto; }
+.h-del-btn:hover { background: #fde0e0; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #0d2a8a; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LOTUS EVANGELIST</h1>
+  <span class="sub">LinkedIn Post Generator</span>
+  <span class="ver">v50</span>
+  <span id="day-badge" class="day-badge">--</span>
+</header>
+
+<!-- shown when no proxy URL is configured and we are not on claude.ai -->
+<div id="proxy-banner" class="proxy-banner">
+  <span>No Cloudflare Worker proxy configured. API calls may fail due to CORS.</span>
+  <span>Go to Settings to enter your Worker URL.</span>
+</div>
+
+<div class="key-bar">
+  <label>Anthropic</label>
+  <input type="password" class="key-input" id="anth-key" placeholder="sk-ant-api03-..." autocomplete="off">
+  <button class="key-btn" onclick="saveAnthKey()">Save</button>
+  <span class="key-status" id="anth-status"></span>
+
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('compose')">✦ COMPOSE</div>
+  <div class="tab" onclick="switchTab('history')">◷ HISTORY</div>
+  <div class="tab" onclick="switchTab('settings')">⚙ SETTINGS</div>
+</div>
+
+<div class="app-body">
+
+  <div id="tab-compose" class="tab-panel active">
+    <aside class="panel-left">
+      <div>
+        <div class="section-label">Category</div>
+        <div class="cat-grid">
+          <button class="cat-btn active" data-cat="domino">HCL Domino</button>
+          <button class="cat-btn" data-cat="modernization">Legacy Modernization</button>
+          <button class="cat-btn" data-cat="ai-strategy">AI Strategy</button>
+          <button class="cat-btn" data-cat="enterprise-it">Enterprise IT</button>
+          <button class="cat-btn" data-cat="cfocio">CFO / CIO Perspective</button>
+          <button class="cat-btn" data-cat="client-story">Client Story</button>
+          <button class="cat-btn" data-cat="advisory">Advisory / Availability</button>
+          <button class="cat-btn" data-cat="culture">Culture / Career</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Topic / Seed Idea</label>
+        <textarea id="topic" placeholder="e.g. Why CIOs keep delaying migrations..."></textarea>
+      </div>
+
+      <div>
+        <div class="section-label">Tone</div>
+        <div class="tone-grid">
+          <button class="tone-btn active" data-tone="practitioner">Practitioner</button>
+          <button class="tone-btn" data-tone="thought-leader">Thought Leader</button>
+          <button class="tone-btn" data-tone="story">War Story</button>
+          <button class="tone-btn" data-tone="question">Provocative Q</button>
+          <button class="tone-btn" data-tone="tip">Tip / How-To</button>
+          <button class="tone-btn" data-tone="cfocio">CFO / CIO</button>
+          <button class="tone-btn" data-tone="hiring">Hire Me Signal</button>
+          <button class="tone-btn" data-tone="unpopular">Unpopular Opinion</button>
+          <button class="tone-btn" data-tone="thread">Numbered List</button>
+          <button class="tone-btn" data-tone="behind">Behind Scenes</button>
+          <button class="tone-btn" data-tone="retrospective">Retrospective</button>
+          <button class="tone-btn" data-tone="myth">Myth Busting</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Schedule For</label>
+        <select id="post-day">
+          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+          <option>Thursday</option><option>Friday</option>
+        </select>
+      </div>
+
+      <hr class="divider">
+
+      <div>
+        <div class="section-label">Signature Touches</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="toggle-row">
+            <span class="lbl">Hidden Music Lyric</span>
+            <label class="toggle"><input type="checkbox" id="lyric-toggle" checked><span class="slider"></span></label>
+          </div>
+          <p class="hint">Hidden lyric is embedded verbatim when toggled on.</p>
+        </div>
+      </div>
+
+      <button class="gen-btn" id="gen-btn" onclick="generatePost()">✦ Generate Post</button>
+
+      <div id="insight-bar" class="insight-bar">
+        <strong>Edit Patterns</strong>
+        <span id="insight-text"></span>
+      </div>
+    </aside>
+
+    <main class="panel-right">
+      <div id="status" class="status-bar"></div>
+
+      <div id="placeholder" class="placeholder">
+        <div class="big">✦</div>
+        <p>Pick a category, enter a topic, choose a tone, click Generate.</p>
+      </div>
+
+      <div id="post-card" class="result-card">
+        <div class="card-top">
+          <span class="card-top-label">LinkedIn Post</span>
+          <div class="card-acts">
+            <button class="sm-btn" onclick="generatePost()">↺ Regen</button>
+            <button class="sm-btn" id="copy-btn" onclick="copyPost()">Copy</button>
+          </div>
+        </div>
+        <textarea id="post-text" spellcheck="true" oninput="onPostEdit()"></textarea>
+        <div class="post-meta">
+          <span id="char-count">0 chars</span>
+          <span id="word-count">0 words</span>
+          <span id="hashtag-count">0 hashtags</span>
+          <span id="read-time">~0 min</span>
+        </div>
+      </div>
+
+      <div id="buffer-row" class="buffer-row">
+        <button class="buf-btn" onclick="openInBuffer()">Copy + Open Buffer</button>
+        <button class="sm-btn" onclick="openQuoteCard()">Visuals</button>
+        <span style="font-size:11px;color:#555;">Copies post to clipboard, then opens Buffer. Paste manually.</span>
+      </div>
+
+      <div id="save-bar" class="save-bar">
+        <p>Edited -- save so future posts learn from changes?</p>
+        <button class="save-btn" onclick="savePost()">Save To History</button>
+      </div>
+
+      <div id="egg-bar" class="egg-bar">
+        <strong>Hidden Lyric</strong>
+        <span id="egg-text"></span>
+      </div>
+
+      <div id="send-row" class="send-row">
+        <input type="email" class="email-input" id="email" value="keith@keithbrooks.com">
+        <button class="send-btn" onclick="sendToGmail()">Email Draft</button>
+      </div>
+    </main>
+  </div>
+
+  <div id="tab-history" class="tab-panel">
+    <div class="hist-head">
+      <h2>Post History</h2>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <span class="hist-stats" id="hist-stats"></span>
+        <button class="h-act-btn" onclick="exportHistory()">Export</button>
+        <label class="h-act-btn" style="cursor:pointer">Import<input type="file" accept=".json" style="display:none" onchange="importHistory(event)"></label>
+        <button class="danger-btn" onclick="clearHistory()">Clear All</button>
+      </div>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+
+  <div id="tab-settings" class="tab-panel">
+
+    <div class="set-section">
+      <div class="set-head">Cloudflare Worker Proxy</div>
+      <div class="set-body">
+        <p class="set-hint">
+          When running on GitHub Pages, all API calls go through your Cloudflare Worker to avoid CORS errors.
+          Deploy <code>worker.js</code> to Cloudflare and paste the URL below (e.g. <code>https://lotus-proxy.yourname.workers.dev</code>).
+          Leave blank to call APIs directly (works in Claude.ai artifacts only).
+        </p>
+        <div class="set-row">
+          <label>Worker URL</label>
+          <input type="text" class="set-input proxy-url" id="proxy-url-input" placeholder="https://lotus-proxy.yourname.workers.dev">
+          <button class="set-btn" onclick="saveProxyUrl()">Save</button>
+          <button class="set-btn" style="background:#555" onclick="testProxy()">Test</button>
+        </div>
+        <p class="set-hint" id="proxy-hint"></p>
+        <div class="set-body" style="padding:0;gap:6px">
+          <p class="set-hint"><strong>Worker routes expected:</strong></p>
+          <p class="set-hint">POST {worker}/anthropic -- Anthropic API proxy</p>
+          <p class="set-hint">POST {worker}/buffer -- Buffer write (create/queue updates)</p>
+          <p class="set-hint">GET  {worker}/buffer-get -- Buffer read (profiles list)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <div class="set-head">Anthropic API Key</div>
+      <div class="set-body">
+        <p class="set-hint">Get your key at console.anthropic.com. Stored in your browser only.</p>
+        <div class="set-row">
+          <label>API Key</label>
+          <input type="password" class="set-input" id="anth-token-settings" placeholder="sk-ant-api03-..." autocomplete="off">
+          <button class="set-btn" onclick="saveAnthFromSettings()">Save</button>
+          <span class="key-status" id="anth-settings-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="set-section">
+      <div class="set-head">Data</div>
+      <div class="set-body">
+        <div class="set-row">
+          <button class="set-btn" onclick="exportHistory()">Export All Posts</button>
+          <label class="set-btn" style="cursor:pointer">Import Posts<input type="file" accept=".json" style="display:none" onchange="importHistory(event)"></label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div id="qc-overlay" class="qc-overlay">
+  <div class="qc-modal">
+    <div class="qc-modal-head">
+      <h3>Visuals</h3>
+      <button class="qc-close" onclick="closeQuoteCard()">✕</button>
+    </div>
+    <div class="qc-format-tabs">
+      <button class="qc-format-tab active" data-fmt="quote" onclick="switchQcFormat('quote')">Quote Card</button>
+      <button class="qc-format-tab" data-fmt="carousel" onclick="switchQcFormat('carousel')">Carousel</button>
+      <button class="qc-format-tab" data-fmt="stat" onclick="switchQcFormat('stat')">Stat Callout</button>
+    </div>
+    <div class="qc-canvas-wrap">
+      <canvas id="qc-canvas" width="1080" height="1350"></canvas>
+    </div>
+    <div class="qc-carousel-nav" id="qc-carousel-nav">
+      <button onclick="qcCarouselPrev()" id="qc-prev-btn">← Prev</button>
+      <span class="qc-slide-count" id="qc-slide-count">Slide 1 / 1</span>
+      <button onclick="qcCarouselNext()" id="qc-next-btn">Next →</button>
+    </div>
+    <div class="qc-controls">
+      <div class="qc-row" id="qc-text-row">
+        <label>Text</label>
+        <textarea id="qc-text-edit" class="qc-text-edit" oninput="onQcTextEdit()"></textarea>
+      </div>
+      <div class="qc-row qc-stat-inputs" id="qc-stat-inputs">
+        <input type="text" class="qc-stat-input" id="qc-stat-number" placeholder="$1M / week" style="width:140px" oninput="renderQuoteCard()">
+        <input type="text" class="qc-stat-input" id="qc-stat-label" placeholder="saved in delays and application issues" style="flex:1;min-width:200px" oninput="renderQuoteCard()">
+      </div>
+      <div class="qc-row">
+        <label>Color</label>
+        <div class="qc-swatches" id="qc-swatches"></div>
+      </div>
+      <div class="qc-acts">
+        <button class="set-btn" onclick="downloadQuoteCard()" id="qc-download-btn">Download PNG</button>
+        <button class="set-btn" onclick="downloadCarouselPdf()" id="qc-download-all-btn" style="display:none">Download PDF</button>
+        <button class="sm-btn" onclick="closeQuoteCard()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let selTone = 'practitioner', selCat = 'domino';
+let curPost = '', genPost = '', curMeta = {}, edited = false;
+
+// ── Detect environment ────────────────────────────────────────────────────────
+// In Claude.ai artifact sandbox we can call Anthropic directly (anthropic-dangerous-allow-browser).
+// On GitHub Pages we MUST go through the Worker.
+function isClaudeArtifact() {
+  try {
+    return !!window.storage || window.location.hostname === 'claude.ai' ||
+      window.location.hostname.endsWith('.claude.ai') ||
+      window.location.protocol === 'blob:' ||
+      window.location.hostname === 'null' ||
+      window.location.hostname === '';
+  } catch (e) { return false; }
+}
+
+// ── Storage helpers ───────────────────────────────────────────────────────────
+async function sg(k) {
+  if (window.storage) { try { const r = await window.storage.get(k); return r ? r.value : null; } catch(e){} }
+  try { return localStorage.getItem(k); } catch(e) { return null; }
+}
+async function ss(k, v) {
+  if (window.storage) { try { await window.storage.set(k, v); return; } catch(e){} }
+  try { localStorage.setItem(k, v); } catch(e) {}
+}
+async function sd(k) {
+  if (window.storage) { try { await window.storage.delete(k); return; } catch(e){} }
+  try { localStorage.removeItem(k); } catch(e) {}
+}
+async function getHist() { try { return JSON.parse(await sg('le-hist') || '[]'); } catch(e) { return []; } }
+async function setHist(a) { await ss('le-hist', JSON.stringify(a)); }
+async function getPats() { try { return JSON.parse(await sg('le-pats') || '[]'); } catch(e) { return []; } }
+async function setPats(a) { await ss('le-pats', JSON.stringify(a)); }
+
+function lGet(k) { try { return localStorage.getItem(k) || ''; } catch(e) { return ''; } }
+function lSet(k, v) { try { localStorage.setItem(k, v); } catch(e) {} }
+
+// ── Key helpers ───────────────────────────────────────────────────────────────
+function saveAnthKey() { const k = document.getElementById('anth-key').value.trim(); if (!k) return; lSet('le-anth', k); setAnthSt(true); document.getElementById('anth-token-settings').value = k; }
+function saveAnthFromSettings() { const k = document.getElementById('anth-token-settings').value.trim(); if (!k) return; lSet('le-anth', k); setAnthSt(true); document.getElementById('anth-key').value = k; const el = document.getElementById('anth-settings-status'); el.textContent = '✓ Saved'; el.className = 'key-status ok'; }
+function getAnth() { return lGet('le-anth'); }
+function setAnthSt(ok) { const el = document.getElementById('anth-status'); el.textContent = ok ? '✓' : '✗ No key'; el.className = 'key-status ' + (ok ? 'ok' : 'no'); }
+
+
+
+// ── Proxy URL helpers ─────────────────────────────────────────────────────────
+function getProxyUrl() { return lGet('le-proxy-url').replace(/\/$/, ''); }
+function saveProxyUrl() {
+  const v = document.getElementById('proxy-url-input').value.trim().replace(/\/$/, '');
+  lSet('le-proxy-url', v);
+  document.getElementById('proxy-hint').textContent = v ? '✓ Proxy URL saved: ' + v : 'Cleared. Will call APIs directly (Claude.ai only).';
+  checkProxyBanner();
+}
+function checkProxyBanner() {
+  const banner = document.getElementById('proxy-banner');
+  const proxy = getProxyUrl();
+  if (isClaudeArtifact() || proxy) {
+    banner.classList.remove('visible');
+  } else {
+    banner.classList.add('visible');
+  }
+}
+async function testProxy() {
+  const proxy = getProxyUrl();
+  if (!proxy) { document.getElementById('proxy-hint').textContent = 'Enter a Worker URL first.'; return; }
+  document.getElementById('proxy-hint').textContent = 'Testing...';
+  try {
+    const resp = await fetch(proxy + '/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': getAnth() || 'test', 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'Hi' }] })
+    });
+    const d = await resp.json();
+    if (d.error && d.error.type === 'authentication_error') {
+      document.getElementById('proxy-hint').textContent = '✓ Worker reachable (auth error expected -- add real API key).';
+    } else if (d.content || d.id) {
+      document.getElementById('proxy-hint').textContent = '✓ Worker reachable and responding correctly.';
+    } else {
+      document.getElementById('proxy-hint').textContent = 'Worker responded: ' + JSON.stringify(d).slice(0, 120);
+    }
+  } catch (err) {
+    document.getElementById('proxy-hint').textContent = 'Connection failed: ' + err.message;
+  }
+}
+
+// ── Routing: choose direct vs proxy ──────────────────────────────────────────
+function anthropicUrl() {
+  const proxy = getProxyUrl();
+  if (proxy) return proxy + '/anthropic';
+  return 'https://api.anthropic.com/v1/messages';
+}
+function anthropicHeaders() {
+  const headers = { 'Content-Type': 'application/json', 'x-api-key': getAnth(), 'anthropic-version': '2023-06-01' };
+  if (!getProxyUrl()) headers['anthropic-dangerous-allow-browser'] = 'true';
+  return headers;
+}
+
+// Buffer calls: always go through proxy when available (Buffer doesn't allow browser direct calls).
+// If no proxy, use Anthropic API with Buffer MCP (the v34 approach).
+function hasProxy() { return !!getProxyUrl(); }
+
+// ── Buffer -- open compose page (direct API auth broken, this always works) ──
+function openInBuffer() {
+  const post = document.getElementById('post-text').value.trim();
+  if (!post) { showStatus('error', 'No post to send.'); return; }
+  if (post.length > 3000) {
+    showStatus('error', '✗ Blocked: post is ' + post.length + ' chars, LinkedIn limit is 3000. Trim it before sending to Buffer.');
+    return;
+  }
+  // Copy to clipboard first so user can paste instantly in Buffer
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(post).catch(() => {});
+  }
+  window.open('https://publish.buffer.com/post/new', '_blank');
+  showStatus('success', '✓ Post copied to clipboard. Paste it into Buffer.');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const ak = getAnth(); if (ak) { document.getElementById('anth-key').value = ak; document.getElementById('anth-token-settings').value = ak; setAnthSt(true); } else setAnthSt(false);
+  const pu = getProxyUrl();
+  if (pu) document.getElementById('proxy-url-input').value = pu;
+  checkProxyBanner();
+  refreshInsight();
+});
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const ti = new Date().getDay();
+document.getElementById('day-badge').textContent = DAYS[ti].toUpperCase();
+let nd = (ti + 1) % 7; if (nd === 0) nd = 1; if (nd === 6) nd = 1;
+const ds = document.getElementById('post-day'); for (let o of ds.options) if (o.value === DAYS[nd]) { o.selected = true; break; }
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(n) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['compose','history','settings'][i] === n));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + n).classList.add('active');
+  if (n === 'history') renderHistory();
+}
+
+document.querySelectorAll('.tone-btn').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.tone-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); selTone = b.dataset.tone; }));
+document.querySelectorAll('.cat-btn').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); selCat = b.dataset.cat; }));
+
+// ── Post editing ──────────────────────────────────────────────────────────────
+function onPostEdit() { curPost = document.getElementById('post-text').value; updateMeta(); if (curPost !== genPost && genPost) { edited = true; document.getElementById('save-bar').classList.add('visible'); } }
+function updateMeta() {
+  const len = curPost.length, w = curPost.trim() ? curPost.trim().split(/\s+/).length : 0, t = (curPost.match(/#\w+/g) || []).length, m = Math.max(1, Math.round(w / 200));
+  const cc = document.getElementById('char-count'); cc.textContent = len + ' / 3000 chars'; cc.className = len > 2900 ? 'warn' : len >= 1400 ? 'ok' : '';
+  document.getElementById('word-count').textContent = w + ' words';
+  const overLimit = len > 3000;
+  const bufBtn = document.querySelector('#buffer-row .buf-btn');
+  if (bufBtn) { bufBtn.disabled = overLimit; bufBtn.title = overLimit ? 'Post exceeds LinkedIn 3000 char limit, trim before sending' : ''; }
+  document.getElementById('hashtag-count').textContent = t + ' hashtag' + (t !== 1 ? 's' : '');
+  document.getElementById('read-time').textContent = '~' + m + ' min';
+}
+
+function copyPost() {
+  const ta = document.getElementById('post-text'); ta.select(); ta.setSelectionRange(0, 99999);
+  try { document.execCommand('copy'); } catch(e) {}
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).catch(() => {});
+  const btn = document.getElementById('copy-btn'); btn.textContent = '✓ Copied'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  window.getSelection && window.getSelection().removeAllRanges();
+}
+
+// ── Save post ─────────────────────────────────────────────────────────────────
+async function savePost() {
+  const hist = await getHist();
+  const e = { id: Date.now(), savedAt: new Date().toISOString(), day: document.getElementById('post-day').value, cat: selCat, tone: selTone, topic: document.getElementById('topic').value.trim(), generated: genPost, final: curPost, wasEdited: genPost !== curPost, lyric: curMeta.hidden_lyric || '', tip: curMeta.posting_tip || '' };
+  hist.unshift(e); if (hist.length > 90) hist.splice(90); await setHist(hist);
+  if (e.wasEdited) { const p = await getPats(); p.unshift({ id: e.id, cat: e.cat, tone: e.tone, note: diffNote(e.generated, e.final) }); if (p.length > 20) p.splice(20); await setPats(p); }
+  document.getElementById('save-bar').classList.remove('visible'); edited = false;
+  showStatus('success', '✓ Saved.'); await refreshInsight(); exportHistory();
+}
+
+function diffNote(o, f) {
+  const d = f.length - o.length, n = [];
+  if (d < -80) n.push('trims (~' + Math.abs(d) + ')');
+  if (d > 80) n.push('expands (+' + d + ')');
+  const oh = (o.match(/#\w+/g) || []).length, fh = (f.match(/#\w+/g) || []).length;
+  if (fh > oh) n.push('adds hashtags'); if (fh < oh) n.push('removes hashtags');
+  const ol = o.split('\n').length, fl = f.split('\n').length;
+  if (fl > ol + 1) n.push('adds line breaks'); if (fl < ol - 1) n.push('tightens');
+  return n.length ? n.join('; ') : 'light edits';
+}
+
+async function refreshInsight() {
+  const p = await getPats(); if (p.length < 2) return;
+  const notes = p.map(x => x.note).join(' | '); const ins = [];
+  if ((notes.match(/trims/g) || []).length >= 2) ins.push('consistently trims shorter');
+  if ((notes.match(/expands/g) || []).length >= 2) ins.push('tends to expand');
+  if ((notes.match(/hashtag/g) || []).length >= 2) ins.push('adjusts hashtags');
+  if ((notes.match(/line break/g) || []).length >= 2) ins.push('prefers line breaks');
+  if (!ins.length && p.length >= 3) ins.push('light consistent edits -- voice is landing');
+  if (ins.length) { document.getElementById('insight-text').textContent = '(' + p.length + ' posts) ' + ins.join(', ') + '.'; document.getElementById('insight-bar').classList.add('visible'); }
+}
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+async function exportHistory() {
+  const payload = { exported: new Date().toISOString(), posts: await getHist(), editPatterns: await getPats() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = 'lotus-evangelist-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); URL.revokeObjectURL(url);
+}
+
+async function importHistory(evt) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      const posts = payload.posts || (Array.isArray(payload) ? payload : []);
+      if (!posts.length) { alert('No posts found.'); return; }
+      const ex = await getHist(), ids = new Set(ex.map(x => x.id));
+      const merged = [...ex, ...posts.filter(x => !ids.has(x.id))]; merged.sort((a, b) => b.id - a.id);
+      await setHist(merged);
+      if (payload.editPatterns) { const ep = await getPats(), epIds = new Set(ep.map(x => x.id)); await setPats([...ep, ...payload.editPatterns.filter(x => !epIds.has(x.id))]); }
+      renderHistory(); alert('Imported ' + posts.length + ' posts.');
+    } catch (e) { alert('Invalid file.'); }
+  };
+  reader.readAsText(file); evt.target.value = '';
+}
+
+// ── Tone / category descriptions ──────────────────────────────────────────────
+const TONE = {
+  practitioner: 'Seasoned practitioner sharing a real-world observation from the trenches. Specific, opinionated, no hedging.',
+  'thought-leader': 'Broad perspective on where the industry is heading. Bold, authoritative, forward-looking.',
+  story: 'Open with a vivid client scenario or personal moment. Pivot to the hard-won lesson.',
+  question: 'Lead with a provocative question challenging executive assumptions. Answer with conviction.',
+  tip: 'One concrete actionable technique. Practical and specific.',
+  cfocio: 'Frame from the financial/strategic lens of a CFO or CIO. Risk, cost, compliance, competitive positioning.',
+  hiring: 'Naturally and credibly position Keith as the person to call. Weave credentials in organically.',
+  unpopular: 'Contrarian but defensible. Blunt hook. Acknowledge pushback, hold the line.',
+  thread: 'Numbered list, 5-8 punchy insights. Intro hooks, outro lands.',
+  behind: 'Pull back the curtain on how Keith actually works. Builds trust and curiosity.',
+  retrospective: 'Lesson learned. First-person, honest, clear takeaway.',
+  myth: 'Name a myth. Bust it with evidence. End with the truth.'
+};
+const CAT = {
+  domino: 'HCL Domino and Notes from the buyer outcome angle. Not for the Domino community (they already agree). Written for CIOs and IT directors who have Domino and are unsure what to do with it. Frame around risk, cost of inaction, and what modern Domino actually delivers.',
+  modernization: 'Legacy modernization ROI and risk, written for CFO and CIO buyers. Technical debt as a business liability. Migration decision frameworks. Cost of delay vs cost of change. Reference real enterprise complexity without jargon.',
+  'ai-strategy': 'AI strategy for mid-market to enterprise. Keith as the advisor who helps CFOs and CIOs cut through vendor hype, build roadmaps that survive contact with reality, and deploy AI that delivers measurable ROI. Practical and skeptical, not evangelizing.',
+  'enterprise-it': 'Broad enterprise IT topics: architecture decisions, vendor selection, technical debt, modernization sequencing, build vs buy, integration complexity. Written for IT leaders making expensive decisions with incomplete information.',
+  cfocio: 'Written explicitly from the CFO or CIO chair. Risk, cost, compliance, competitive positioning, board-level pressure, vendor management. Keith understands their world and their language.',
+  'client-story': 'A real client outcome Keith can stand behind, anonymized where needed. Must include a concrete result (timeframe, scale, cost saved, risk avoided, or decision made) that is true to Keith\'s actual work. Keith has worked with Teva Pharmaceuticals, Valley Regional Hospital, Shore Medical Center, Clal-Ipex, T. Rowe Price, IBM EMEA. Reference these only with details that are genuinely accurate. Do not invent specific numbers, quotes, or scenarios that did not happen. If no real anchor exists for the topic, write it as an industry pattern Keith has observed across clients generally, not a fabricated single-client story.',
+  advisory: 'Keith as independent advisor signaling availability. Weave in credentials naturally. Always end with the booking link: https://b2bwhisperer.com/booking',
+  culture: 'Tech culture, enterprise careers, conference observations, team dynamics. Broader reach post. Good for growing audience but should still reflect enterprise seniority. Limit to one per week.'
+};
+
+// ── System prompt ─────────────────────────────────────────────────────────────
+async function buildSys() {
+  const p = await getPats();
+  const ec = p.length ? '\n\nEDIT PATTERNS:\n' + p.slice(0, 8).map(x => `- ${x.tone}/${x.cat}: ${x.note}`).join('\n') : '';
+  return `Ghostwrite LinkedIn posts for Keith Brooks. HCL Ambassador 2020-2026, enterprise modernization and AI strategy advisor, independent consultant at B2B Whisperer / The Rockteam. 25+ years experience. Clients are CFOs and CIOs at mid-market to enterprise companies.
+
+VOICE AND FORMAT: This is the most important section. Read it carefully.
+
+Keith writes the way he talks. Not the way a consultant writes a white paper.
+
+Every sentence gets its own line.
+Not three short thoughts crammed together.
+Like this.
+
+He opens mid-thought, already in the conversation. "Post mortems. Every company does them. Almost none of them work." Not "Today I want to explore the topic of incident management."
+
+He states the conclusion first, then backs it up. No building to a reveal.
+
+He gets specific. Not "a large client" but "Citibank, managing collaboration across 21 countries." Not "we saved significant time" but "roughly $1M a week in delays." Specific beats vague every single time.
+
+He gets irritated when irritated, and says so directly. Not "it can be frustrating when" but "Nobody read it. Not one person."
+
+He uses parenthetical asides naturally. (Not as decoration. As actual digressions he couldn't help making.)
+
+He mixes technical depth with personality without apologizing for either.
+
+Sarcasm and dry humor appear without being telegraphed.
+
+DO NOT write like a newsletter, a LinkedIn thought leader template, a press release, or a consultant bio. If it sounds like something a VP of Marketing approved, start over.
+
+No corporate speak. No "in today's rapidly evolving landscape." No "it is important to note." No "leveraging synergies." None of it.
+
+No emojis. No bullet lists except numbered list tone. Hashtags at END only (3-4 max).
+
+LENGTH: Target 2300-2600 characters TOTAL including hashtags. Never below 2000. Never above 2700. LinkedIn hard limit is 3000. Count every character. NEVER use em dashes. Use commas or parentheses instead.
+
+REAL CLIENT ANCHORS (use these, do not invent others, rotate based on topic relevance):
+- Burger King: architecture and infrastructure cleanup saved franchisees roughly $1M per week in delays and application issues. Use when topic is infrastructure, architecture, or operations.
+- Lowe's: diagnosed and fixed LDAP directory corruption that was dropping and incorrectly editing user accounts across the organization. Use when topic is directory services, identity, or troubleshooting.
+- Bank of America: backup data center project that proved its value when 9/11 happened. Use when topic is resilience, disaster recovery, or business continuity.
+- A major Wall Street financial firm (do not name T. Rowe Price): modernization projects to secure client logins and build advanced client reporting. Use when topic is modernization, security, or financial services.
+- Citibank: managed the South American collaboration network across 21 countries. Use when topic is scale, global infrastructure, or collaboration.
+- Valley Regional Hospital, Shore Medical Center, Toyota Financial Services: acted as MSP. Use when topic is managed services, healthcare IT, or financial services IT.
+- Numerous email migrations and CRM customizations: helped sales teams sell more and do less data entry. Use when topic is CRM, sales enablement, or migration.
+- NATO, Teva Pharmaceuticals: on the client roster. No specific outcomes documented yet, do not invent details.
+NEVER invent facts, numbers, quotes, or scenarios. If no real anchor fits the topic, write it as general industry observation from Keith's experience. Better to have no anecdote than a fake one. Note in posting_tip if a real Keith detail would strengthen the post.
+
+BUYER FOCUS: Every post should resonate with a CFO or CIO who has legacy systems, is evaluating AI, or needs an independent advisor. Do not write primarily for the HCL/Domino community.
+
+OPENING LINES: Never open with "I was talking to a CFO" or "I was in a meeting where." When referencing client work, say it the way Keith actually talks: "a client's leadership team," "a CIO I've worked with," or just describe the situation directly.
+
+CTA RULES:
+The CTA must sound like Keith talking to a peer who is dealing with the same problem, not like a consultant closing a sale. Keith commiserates first, then offers the door. Never pitch. Never say "my calendar is open" or "worth a conversation" or "let's connect."
+
+These are Keith's actual CTA patterns. Use one of these or a close natural variant:
+- "If you are tired of [specific problem from the post], help is just a meeting away. https://b2bwhisperer.com/booking"
+- "If you hate this too and don't know how to change it in your organization, I can help. https://b2bwhisperer.com/booking"
+- "If you are running into this and are not sure where to start, I have been there. https://b2bwhisperer.com/booking"
+
+Advisory category: always end with one of these CTA patterns.
+All other categories: end with a strong closing statement. Use a CTA only when the post naturally creates the opening for one, and only using the patterns above.
+Never end with "what do you think?" or any generic engagement bait.
+
+EXAMPLE POST (match this length, voice, and structure):
+---
+Post mortems don't work because everyone skips the step that would have prevented them.
+
+Testing.
+
+Not checkbox testing. Actual scenario testing, where someone tries to break the thing before it goes to production. What happens when two things fail at the same time. What the system does when a dependency it expects isn't there. Those scenarios are almost always knowable in advance.
+
+I've sat through a lot of post mortems. Financial services, healthcare, food service. The format is always roughly the same. Timeline, contributing factors, action items, next steps. Everyone nods. Someone takes notes. The doc goes into Confluence and is never read again.
+
+Six months later you're in the same meeting.
+
+In most of those cases the honest answer wasn't a configuration error or a vendor bug. It was that nobody had tested the failure scenarios before the thing went live. A staging environment that didn't match production. An upgrade that skipped several versions and introduced a change nobody caught. A dependency that wasn't documented anywhere except in one engineer's head.
+
+All of it knowable. None of it tested.
+
+The post mortem tells you what broke. It doesn't tell you why your process let it get that far.
+
+That's the harder conversation, because fixing testing gaps means slowing down releases, which means someone has to tell the business why the next feature is delayed. That conversation is uncomfortable. So it doesn't happen. And the post mortems keep happening instead.
+
+If your team is doing more post mortems than structured pre-release testing, that is a priority decision someone made, probably without realizing it.
+
+If you are tired of running the same post mortem for the same class of problem, I've been there. Help is just a meeting away. https://b2bwhisperer.com/booking
+
+#EnterpriseIT #ITLeadership #IncidentManagement #Testing
+---
+Note what makes this work: opens with the conclusion, no throat-clearing, admits the harder truth partway through, ends with commiseration not a pitch, one sentence often gets its own line when it needs to land.
+
+QUIRKS (apply when instructed):
+1. HIDDEN LYRIC: Embed an EXACT verbatim lyric word-for-word. Do not alter a single word. Must fit grammatically and feel natural, not shoehorned.
+
+${ec}
+
+OUTPUT: ONLY valid JSON, no markdown:
+{"post":"...","hidden_lyric":"exact words -- Song, Artist","posting_tip":"one specific suggestion for improving this post or adding a real Keith detail"}`;
+}
+
+function buildUser() {
+  return `LinkedIn post for ${document.getElementById('post-day').value}.\nCategory: ${CAT[selCat]}\nTopic: ${document.getElementById('topic').value.trim() || 'Choose an appropriate topic for my audience and voice.'}\nTone: ${TONE[selTone]}\nHidden lyric: ${document.getElementById('lyric-toggle').checked ? 'YES' : 'NO'}\nOutput ONLY the JSON.`;
+}
+
+// ── Generate post ─────────────────────────────────────────────────────────────
+async function generatePost() {
+  const ak = getAnth(); if (!ak) { showStatus('error', 'Add your Anthropic API key first.'); return; }
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="loading-pulse"><span></span><span></span><span></span></span> Writing...';
+  showStatus('info', 'Drafting your post...');
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('egg-bar').classList.remove('visible');
+  document.getElementById('save-bar').classList.remove('visible');
+  document.getElementById('buffer-row').classList.remove('visible');
+  edited = false; await refreshInsight();
+
+  try {
+    const resp = await fetch(anthropicUrl(), {
+      method: 'POST',
+      headers: anthropicHeaders(),
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, system: await buildSys(), messages: [{ role: 'user', content: buildUser() }] })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content.map(b => b.text || '').join('');
+    let parsed; try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch(e) { throw new Error('Could not parse response.'); }
+    curPost = (parsed.post || '').replace(/\u2014/g, ',').replace(/ -- /g, ', ').replace(/--/g, ','); genPost = curPost; curMeta = parsed;
+    document.getElementById('post-text').value = curPost; updateMeta();
+    document.getElementById('post-card').classList.add('visible');
+    document.getElementById('send-row').classList.add('visible');
+    document.getElementById('buffer-row').classList.add('visible');
+    if (parsed.hidden_lyric) { document.getElementById('egg-text').textContent = '"' + parsed.hidden_lyric + '"'; document.getElementById('egg-bar').classList.add('visible'); }
+    const hist = await getHist();
+    hist.unshift({ id: Date.now(), savedAt: new Date().toISOString(), day: document.getElementById('post-day').value, cat: selCat, tone: selTone, topic: document.getElementById('topic').value.trim(), generated: curPost, final: curPost, wasEdited: false, lyric: parsed.hidden_lyric || '', tip: parsed.posting_tip || '' });
+    if (hist.length > 90) hist.splice(90); await setHist(hist);
+    showStatus('success', '✓ Post ready.' + (parsed.posting_tip ? ' · ' + parsed.posting_tip : ''));
+  } catch (err) {
+    showStatus('error', 'Error: ' + err.message);
+    document.getElementById('placeholder').style.display = 'flex';
+  } finally {
+    btn.disabled = false; btn.innerHTML = '✦ Generate Post';
+  }
+}
+
+// ── History render ────────────────────────────────────────────────────────────
+async function renderHistory() {
+  const hist = await getHist();
+  document.getElementById('hist-stats').textContent = hist.length + ' posts saved';
+  const c = document.getElementById('hist-list');
+  if (!hist.length) { c.innerHTML = '<div class="hist-empty">No posts yet.</div>'; return; }
+  c.innerHTML = hist.map(e => {
+    const date = new Date(e.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `<div class="h-card"><div class="h-card-head"><span class="h-date">${date} · ${e.day || ''}</span><span class="h-tag cat">${e.cat || ''}</span><span class="h-tag tone">${e.tone || ''}</span>${e.wasEdited ? '<span class="h-tag edited">Edited</span>' : ''}</div><div class="h-card-body">${(e.final || e.generated || '').slice(0, 240)}</div><div class="h-card-foot"><button class="h-act-btn" onclick="loadHist(${e.id})">Load</button><button class="h-del-btn" onclick="delEntry(${e.id})">Delete</button></div></div>`;
+  }).join('');
+}
+
+async function loadHist(id) {
+  const hist = await getHist(), e = hist.find(x => x.id === id); if (!e) return;
+  document.getElementById('post-text').value = e.final || e.generated || '';
+  document.getElementById('topic').value = e.topic || '';
+  curPost = document.getElementById('post-text').value; genPost = e.generated || ''; updateMeta();
+  document.getElementById('post-card').classList.add('visible');
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('send-row').classList.add('visible');
+  document.getElementById('buffer-row').classList.add('visible');
+  switchTab('compose'); showStatus('info', 'Loaded from history.');
+}
+async function delEntry(id) { await setHist((await getHist()).filter(x => x.id !== id)); renderHistory(); }
+async function clearHistory() {
+  if (!confirm('Delete all posts and edit patterns?')) return;
+  await sd('le-hist'); await sd('le-pats'); renderHistory();
+  document.getElementById('insight-bar').classList.remove('visible');
+}
+
+// ── Gmail ─────────────────────────────────────────────────────────────────────
+function sendToGmail() {
+  const email = document.getElementById('email').value.trim(), post = document.getElementById('post-text').value, day = document.getElementById('post-day').value;
+  if (!email || !post) return;
+  const tip = curMeta.posting_tip ? '\nTip: ' + curMeta.posting_tip : '';
+  const lyric = curMeta.hidden_lyric ? '\nLyric: ' + curMeta.hidden_lyric : '';
+  const kb = curMeta.kb_ref ? '\nRef: ' + curMeta.kb_ref : '';
+  window.location.href = 'mailto:' + email + '?subject=' + encodeURIComponent('LinkedIn draft -- ' + day) + '&body=' + encodeURIComponent(day + tip + lyric + kb + '\n\n' + post + '\n\nLotus Evangelist v50');
+  showStatus('success', '✓ Opening mail app.');
+}
+
+// ── Visuals: Quote Card, Carousel, Stat Callout ────────────────────────────────
+const QC_COLORS = {
+  blue:   { bg: '#0d2a8a', text: '#ffffff', accent: '#aac0e8', label: 'CFO / CIO' },
+  orange: { bg: '#a8451a', text: '#ffffff', accent: '#ffd9b0', label: 'Unpopular Opinion' },
+  green:  { bg: '#0f5c2e', text: '#ffffff', accent: '#bfe8cf', label: 'Services / Modernization' },
+  purple: { bg: '#4a1a8a', text: '#ffffff', accent: '#d8c2f0', label: 'Myth Busting' },
+  yellow: { bg: '#a87520', text: '#ffffff', accent: '#ffe9b0', label: 'HCL Domino / Notes' },
+  navy:   { bg: '#0d2a8a', text: '#ffffff', accent: '#aac0e8', label: 'Default' }
+};
+
+function qcColorForPost() {
+  if (selTone === 'unpopular') return 'orange';
+  if (selTone === 'myth') return 'purple';
+  if (selCat === 'domino') return 'yellow';
+  if (selCat === 'cfocio') return 'blue';
+  if (selCat === 'modernization') return 'green';
+  if (selCat === 'advisory') return 'green';
+  const palette = ['blue','orange','green','purple','yellow'];
+  return palette[new Date().getDay() % palette.length];
+}
+
+function qcFooterSubtitle() {
+  const map = {
+    domino: 'HCL Ambassador  |  B2B Whisperer',
+    modernization: 'Modernization Advisor  |  B2B Whisperer',
+    'ai-strategy': 'AI Strategy Advisor  |  B2B Whisperer',
+    'enterprise-it': 'Enterprise IT Advisor  |  B2B Whisperer',
+    cfocio: 'CFO / CIO Advisor  |  B2B Whisperer',
+    'client-story': 'Enterprise Advisor  |  B2B Whisperer',
+    advisory: 'Independent Advisor  |  B2B Whisperer',
+    culture: 'B2B Whisperer'
+  };
+  return map[selCat] || 'B2B Whisperer';
+}
+
+let qcColorKey = 'navy';
+let qcFormat = 'quote'; // quote | carousel | stat
+let qcSlides = [];      // array of strings, one per carousel slide
+let qcSlideIdx = 0;
+let qcStatNumber = '';
+let qcStatLabel = '';
+
+async function openQuoteCard() {
+  const post = document.getElementById('post-text').value.trim();
+  if (!post) { showStatus('error', 'Generate a post first.'); return; }
+  qcColorKey = qcColorForPost();
+  document.getElementById('qc-overlay').classList.add('visible');
+  switchQcFormat('quote');
+  renderQcSwatches();
+  await generateVisualContent(post);
+}
+
+function closeQuoteCard() { document.getElementById('qc-overlay').classList.remove('visible'); }
+
+function switchQcFormat(fmt) {
+  qcFormat = fmt;
+  document.querySelectorAll('.qc-format-tab').forEach(b => b.classList.toggle('active', b.dataset.fmt === fmt));
+  document.getElementById('qc-carousel-nav').classList.toggle('visible', fmt === 'carousel');
+  document.getElementById('qc-text-row').style.display = fmt === 'stat' ? 'none' : 'flex';
+  document.getElementById('qc-stat-inputs').classList.toggle('visible', fmt === 'stat');
+  document.getElementById('qc-download-btn').style.display = fmt === 'carousel' ? 'none' : 'inline-block';
+  document.getElementById('qc-download-all-btn').style.display = fmt === 'carousel' ? 'inline-block' : 'none';
+  renderQuoteCard();
+}
+
+// Single call to Claude that generates the right content for whichever format
+// the user has open, reusing one fetch per format rather than three separate ones up front.
+async function generateVisualContent(post) {
+  const ak = getAnth();
+  if (!ak) {
+    document.getElementById('qc-text-edit').value = post.split('\n').find(l => l.trim().length > 20) || post.slice(0, 140);
+    qcSlides = [document.getElementById('qc-text-edit').value];
+    renderQuoteCard();
+    return;
+  }
+  document.getElementById('qc-text-edit').value = 'Generating...';
+  try {
+    const resp = await fetch(anthropicUrl(), {
+      method: 'POST',
+      headers: anthropicHeaders(),
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 700,
+        system: `You analyze a LinkedIn post and produce content for three visual formats. Output ONLY valid JSON, no markdown:
+{
+  "quote": "the single most quotable, screenshot-worthy line, verbatim from the post, under 220 characters",
+  "carousel_slides": ["slide 1 text", "slide 2 text", "..."],
+  "stat_number": "the single most important number/figure in the post if one exists, formatted short like '$1M / week' or '340 apps', or empty string if none",
+  "stat_label": "a short label under 60 chars explaining what the stat means, or empty string if no stat exists"
+}
+For carousel_slides: produce 3 to 6 slides. Slide 1 is always a hook title (under 80 chars). If the post has a numbered list structure, make each subsequent slide one numbered point (condensed to under 140 chars). Otherwise break the post's argument into a logical sequence: hook, problem, insight, evidence, takeaway. Last slide should be a closing statement or call to action, never just "thanks for reading". Keep total slide count proportional to how much real content the post contains, do not pad.`,
+        messages: [{ role: 'user', content: 'Post:\n\n' + post }]
+      })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content.map(b => b.text || '').join('').trim();
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    document.getElementById('qc-text-edit').value = (parsed.quote || '').replace(/^["']|["']$/g, '');
+    qcSlides = (parsed.carousel_slides && parsed.carousel_slides.length) ? parsed.carousel_slides : [parsed.quote || post.slice(0, 140)];
+    qcSlideIdx = 0;
+    qcStatNumber = parsed.stat_number || '';
+    qcStatLabel = parsed.stat_label || '';
+    document.getElementById('qc-stat-number').value = qcStatNumber;
+    document.getElementById('qc-stat-label').value = qcStatLabel;
+    updateSlideCount();
+    renderQuoteCard();
+  } catch (err) {
+    const fallback = post.split('\n').find(l => l.trim().length > 20) || post.slice(0, 140);
+    document.getElementById('qc-text-edit').value = fallback;
+    qcSlides = [fallback];
+    renderQuoteCard();
+  }
+}
+
+function onQcTextEdit() {
+  if (qcFormat === 'carousel') { qcSlides[qcSlideIdx] = document.getElementById('qc-text-edit').value; }
+  renderQuoteCard();
+}
+
+function updateSlideCount() {
+  document.getElementById('qc-slide-count').textContent = 'Slide ' + (qcSlideIdx + 1) + ' / ' + qcSlides.length;
+  document.getElementById('qc-prev-btn').disabled = qcSlideIdx === 0;
+  document.getElementById('qc-next-btn').disabled = qcSlideIdx >= qcSlides.length - 1;
+}
+
+function qcCarouselPrev() { if (qcSlideIdx > 0) { qcSlideIdx--; loadSlideIntoEditor(); } }
+function qcCarouselNext() { if (qcSlideIdx < qcSlides.length - 1) { qcSlideIdx++; loadSlideIntoEditor(); } }
+function loadSlideIntoEditor() {
+  document.getElementById('qc-text-edit').value = qcSlides[qcSlideIdx] || '';
+  updateSlideCount();
+  renderQuoteCard();
+}
+
+function renderQcSwatches() {
+  const wrap = document.getElementById('qc-swatches');
+  wrap.innerHTML = Object.keys(QC_COLORS).filter(k => k !== 'navy').map(k =>
+    `<div class="qc-swatch ${k === qcColorKey ? 'active' : ''}" style="background:${QC_COLORS[k].bg}" title="${QC_COLORS[k].label}" onclick="qcColorKey='${k}';renderQcSwatches();renderQuoteCard();"></div>`
+  ).join('');
+}
+
+function renderQuoteCard() {
+  if (qcFormat === 'quote') renderQuoteCardCanvas();
+  else if (qcFormat === 'carousel') renderCarouselCanvas();
+  else if (qcFormat === 'stat') renderStatCanvas();
+}
+
+function drawBaseCard(ctx, W, H, c) {
+  ctx.fillStyle = c.bg;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = c.accent;
+  ctx.globalAlpha = 0.25;
+  ctx.fillRect(0, 0, W, 14);
+  ctx.globalAlpha = 1;
+}
+
+function drawFooter(ctx, W, H, c) {
+  ctx.font = '700 30px "DM Mono", monospace';
+  ctx.fillStyle = c.text;
+  ctx.textAlign = 'left';
+  ctx.fillText('KEITH BROOKS', 80, H - 140);
+  ctx.font = '400 24px "DM Mono", monospace';
+  ctx.globalAlpha = 0.85;
+  ctx.fillText(qcFooterSubtitle(), 80, H - 100);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = c.accent;
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(80, H - 175); ctx.lineTo(W - 80, H - 175); ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+function wrapText(ctx, text, maxWidth) {
+  const words = text.split(/\s+/);
+  let lines = [], cur = '';
+  for (const w of words) {
+    const test = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth && cur) { lines.push(cur); cur = w; }
+    else cur = test;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function renderQuoteCardCanvas() {
+  const canvas = document.getElementById('qc-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1350;
+  const c = QC_COLORS[qcColorKey] || QC_COLORS.navy;
+  const quote = document.getElementById('qc-text-edit').value.trim();
+
+  drawBaseCard(ctx, W, H, c);
+
+  ctx.fillStyle = c.accent;
+  ctx.font = '700 160px Georgia, serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('"', 70, 280);
+
+  ctx.fillStyle = c.text;
+  const maxWidth = W - 160;
+  const fontSize = quote.length > 160 ? 52 : quote.length > 100 ? 58 : 66;
+  ctx.font = '700 ' + fontSize + 'px "DM Mono", monospace';
+  const lineHeight = fontSize * 1.32;
+  const lines = wrapText(ctx, quote, maxWidth);
+  const blockHeight = lines.length * lineHeight;
+  let startY = (H / 2) - (blockHeight / 2) + fontSize * 0.3;
+  lines.forEach((line, i) => ctx.fillText(line, 80, startY + i * lineHeight));
+
+  drawFooter(ctx, W, H, c);
+}
+
+function renderCarouselCanvas() {
+  const canvas = document.getElementById('qc-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1350;
+  const c = QC_COLORS[qcColorKey] || QC_COLORS.navy;
+  const slideText = (qcSlides[qcSlideIdx] || '').trim();
+  const isFirst = qcSlideIdx === 0;
+  const isLast = qcSlideIdx === qcSlides.length - 1;
+
+  drawBaseCard(ctx, W, H, c);
+
+  // slide number badge top right
+  ctx.font = '700 26px "DM Mono", monospace';
+  ctx.fillStyle = c.accent;
+  ctx.textAlign = 'right';
+  ctx.fillText((qcSlideIdx + 1) + ' / ' + qcSlides.length, W - 70, 90);
+  ctx.textAlign = 'left';
+
+  ctx.fillStyle = c.text;
+  const maxWidth = W - 160;
+  const fontSize = isFirst ? 72 : slideText.length > 140 ? 46 : 54;
+  ctx.font = (isFirst ? '700 ' : '600 ') + fontSize + 'px "DM Mono", monospace';
+  const lineHeight = fontSize * 1.3;
+  const lines = wrapText(ctx, slideText, maxWidth);
+  const blockHeight = lines.length * lineHeight;
+  let startY = (H / 2) - (blockHeight / 2) + fontSize * 0.3;
+  lines.forEach((line, i) => ctx.fillText(line, 80, startY + i * lineHeight));
+
+  // nav hint
+  ctx.font = '400 22px "DM Mono", monospace';
+  ctx.fillStyle = c.accent;
+  ctx.globalAlpha = 0.8;
+  if (!isLast) ctx.fillText('swipe →', W - 200, H - 200);
+  ctx.globalAlpha = 1;
+
+  drawFooter(ctx, W, H, c);
+}
+
+function renderStatCanvas() {
+  const canvas = document.getElementById('qc-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1350;
+  const c = QC_COLORS[qcColorKey] || QC_COLORS.navy;
+  const num = (document.getElementById('qc-stat-number').value || qcStatNumber || '').trim();
+  const label = (document.getElementById('qc-stat-label').value || qcStatLabel || '').trim();
+
+  drawBaseCard(ctx, W, H, c);
+
+  ctx.fillStyle = c.text;
+  ctx.textAlign = 'center';
+  const numFontSize = num.length > 10 ? 110 : 150;
+  ctx.font = '700 ' + numFontSize + 'px "DM Mono", monospace';
+  ctx.fillText(num || '—', W / 2, H / 2 - 30);
+
+  ctx.font = '600 38px "DM Mono", monospace';
+  ctx.fillStyle = c.accent;
+  const maxWidth = W - 200;
+  const lines = wrapText(ctx, label || 'Add a label for this stat', maxWidth);
+  const lineHeight = 50;
+  let startY = H / 2 + 60;
+  lines.forEach((line, i) => ctx.fillText(line, W / 2, startY + i * lineHeight));
+  ctx.textAlign = 'left';
+
+  drawFooter(ctx, W, H, c);
+}
+
+function downloadQuoteCard() {
+  const canvas = document.getElementById('qc-canvas');
+  const url = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  const suffix = qcFormat === 'stat' ? 'stat' : 'quote';
+  a.href = url; a.download = 'lotus-' + suffix + '-' + new Date().toISOString().slice(0, 10) + '.png'; a.click();
+  showStatus('success', '✓ Image downloaded. Attach it in Buffer alongside the post text.');
+}
+
+async function downloadCarouselPdf() {
+  if (!qcSlides.length) { showStatus('error', 'No slides to export.'); return; }
+  showStatus('info', 'Building PDF...');
+
+  const { jsPDF } = window.jspdf;
+  // Each canvas is 1080x1350px. Convert to mm at 96dpi: 1px = 0.2646mm
+  const PX = 0.2646;
+  const W_MM = 1080 * PX; // ~285.8mm
+  const H_MM = 1350 * PX; // ~357.2mm
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [W_MM, H_MM] });
+
+  const originalIdx = qcSlideIdx;
+
+  for (let i = 0; i < qcSlides.length; i++) {
+    qcSlideIdx = i;
+    updateSlideCount();
+    renderCarouselCanvas();
+    await new Promise(r => setTimeout(r, 80)); // let canvas paint
+
+    const canvas = document.getElementById('qc-canvas');
+    const imgData = canvas.toDataURL('image/jpeg', 0.92); // JPEG for smaller PDF
+
+    if (i > 0) pdf.addPage([W_MM, H_MM], 'portrait');
+    pdf.addImage(imgData, 'JPEG', 0, 0, W_MM, H_MM);
+  }
+
+  // restore original slide view
+  qcSlideIdx = originalIdx;
+  updateSlideCount();
+  renderCarouselCanvas();
+
+  const filename = 'lotus-carousel-' + new Date().toISOString().slice(0, 10) + '.pdf';
+  pdf.save(filename);
+  showStatus('success', '✓ PDF downloaded (' + qcSlides.length + ' slides). Upload directly to LinkedIn or Buffer as a document post.');
+}
+
+function showStatus(t, m) { const el = document.getElementById('status'); el.className = 'status-bar visible ' + t; el.textContent = m; }
+
+
+</script>
+</body>
+</html>
