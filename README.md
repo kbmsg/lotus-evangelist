@@ -7,4 +7,4 @@ v51 cleaned out cliches and bad AI phrasing, but also some other things that wer
 v53 added Notion backend to save posts<p>
 v55 reinstated banned phrases, added option to write an article vs post, more learning from my edits.<p>
 v57 Fixed Article JSON code and upped tokens for size<p>
-v58 Cleaned up more Ai speak
+v58-60 Cleaned up more Ai speak and push for better sentence structure
