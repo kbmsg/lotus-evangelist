@@ -8,4 +8,5 @@ v53 added Notion backend to save posts<p>
 v55 reinstated banned phrases, added option to write an article vs post, more learning from my edits.<p>
 v57 Fixed Article JSON code and upped tokens for size<p>
 v58-60 Cleaned up more Ai speak and push for better sentence structure<p>
-V61-62 cleaned up tones and purposes, defined a day per topic for consistency, and made controversy a specific requirement while also thinking about headhunters
+V61-62 cleaned up tones and purposes, defined a day per topic for consistency, and made controversy a specific requirement while also thinking about headhunters<p>
+v63 Predefined day matches a topic, tone is open, and copying anything autodsaves to history.
