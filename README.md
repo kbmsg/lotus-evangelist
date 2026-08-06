@@ -9,4 +9,5 @@ v55 reinstated banned phrases, added option to write an article vs post, more le
 v57 Fixed Article JSON code and upped tokens for size<p>
 v58-60 Cleaned up more Ai speak and push for better sentence structure<p>
 V61-62 cleaned up tones and purposes, defined a day per topic for consistency, and made controversy a specific requirement while also thinking about headhunters<p>
-v63 Predefined day matches a topic, tone is open, and copying anything autodsaves to history.
+v63 Predefined day matches a topic, tone is open, and copying anything auto-saves to history.<p>
+V66 Now has branded names for each day, and they appear on the cards.
