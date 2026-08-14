@@ -3,6 +3,7 @@ LI post creator<p>
 
 Use it over here: https://kbmsg.github.io/lotus-evangelist<p>
 
+V69 Added non-profit to a day of the week and excluded more fake AI verbiage<p>
 v68 Be more critical of posts when writing better hooks and purpose<p>
 v67 minor UI fixes<p>
 V66 Now has branded names for each day, and they appear on the cards.<p>
