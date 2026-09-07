@@ -3,8 +3,9 @@ LI post creator<p>
 
 Use it over here: https://kbmsg.github.io/lotus-evangelist<p>
 
-v74 Now with brighter visual background colors. And a better review process. Review button appears next to Visuals in the action row once a post is generated. 
-Click it, and a panel opens below with four scores, Hook, Controversy, Close, and Signal, each rated Strong / Needs Work / Weak in color-coded chips. 
+v76 Better starting, powerful endings, genericize company names, reduce passive voice, get people active to comment.<P>
+v74 Now with brighter visual background colors. And a better review process. Review button appears next to Visuals in the action row once a post is generated. <p>
+Click it, and a panel opens below with four scores, Hook, Controversy, Close, and Signal, each rated Strong / Needs Work / Weak in color-coded chips.<p> 
 Below the scores are 2-4 specific actionable suggestions pointing to the exact line that needs fixing.<p>
 v72 Tightened up language, and conclusions. Updated categories and mapping. Asked it not to write like a lame mba professor. <p>
 V69 Added non-profit to a day of the week and excluded more fake AI verbiage<p>
