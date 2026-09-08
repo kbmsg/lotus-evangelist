@@ -3,6 +3,7 @@ LI post creator<p>
 
 Use it over here: https://kbmsg.github.io/lotus-evangelist<p>
 
+v79 Fixing details like looking at customer rather than systems<p>
 v77 More banned phrases and removal of corporate speak<p>
 v76 Better starting, powerful endings, genericize company names, reduce passive voice, get people active to comment.<P>
 v74 Now with brighter visual background colors. And a better review process. Review button appears next to Visuals in the action row once a post is generated. <p>
