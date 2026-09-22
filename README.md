@@ -3,7 +3,8 @@ LI post creator<p>
 
 Use it over here: https://kbmsg.github.io/lotus-evangelist<p>
 
-v80 Remove vendor BS and question phrasing < p>
+v81 Adjusted topics, more Domino and no filter to focus on ageism<p>
+v80 Remove vendor BS and question phrasing <p>
 v79 Fixing details like looking at customer rather than systems<p>
 v77 More banned phrases and removal of corporate speak<p>
 v76 Better starting, powerful endings, genericize company names, reduce passive voice, get people active to comment.<P>
