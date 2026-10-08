@@ -3,6 +3,7 @@ LI post creator<p>
 
 Use it over here: https://kbmsg.github.io/lotus-evangelist<p>
 
+v86 Lots of updates including LI data, change in redundancy and reviewing past notion data<P>
 v81 Adjusted topics, more Domino and no filter to focus on ageism<p>
 v80 Remove vendor BS and question phrasing <p>
 v79 Fixing details like looking at customer rather than systems<p>
