@@ -3,6 +3,7 @@ LI post creator<p>
 
 Use it over here: https://kbmsg.github.io/lotus-evangelist<p>
 
+v89 fixed notion and a 2 week review rather than 1 week<p>
 v88 made major changes to uploading stats, reviews, themes, data, insight<p>
 v87 fixed the stat upload<p>
 v86 Lots of updates including LI data, change in redundancy and reviewing past notion data<P>
