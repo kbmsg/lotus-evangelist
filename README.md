@@ -3,6 +3,7 @@ LI post creator<p>
 
 Use it over here: https://kbmsg.github.io/lotus-evangelist<p>
 
+v93 fixes tone, sentence structure, and paragraphs. Also reviews prior posts <p>
 v92 fixed the suggestions to learn from the topic and seed idea<p>
 v91 changes again to be more focused and fractional cio <p>
 v90 separates long posts into 2 pieces so Notion can handle them<p>
